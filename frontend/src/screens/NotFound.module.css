@@ -1,0 +1,210 @@
+.page {
+  --tom-blue: #37474f;
+  --wall-color: #ffecd2;
+  --floor-color: #5d4037;
+  --hole-black: #1a1a1a;
+  --cheese-yellow: #ffc107;
+  --cheese-holes: #ffb300;
+
+  background-color: var(--wall-color);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  font-family: 'Comic Neue', cursive;
+  position: relative;
+}
+
+.textContainer {
+  position: absolute;
+  top: 20%;
+  text-align: center;
+  z-index: 10;
+  padding: 0 1rem;
+}
+
+.title {
+  font-family: 'Bangers', cursive;
+  font-size: 8rem;
+  color: #d32f2f;
+  text-shadow: 4px 4px 0px #000;
+  margin-bottom: 0;
+  line-height: 0.8;
+  letter-spacing: 2px;
+  transform: rotate(-3deg);
+}
+
+.subtitle {
+  font-size: 2rem;
+  color: var(--tom-blue);
+  margin-top: 1rem;
+}
+
+.description {
+  font-size: 1.2rem;
+  color: #555;
+  margin-bottom: 2rem;
+}
+
+.btn {
+  background: var(--tom-blue);
+  color: white;
+  padding: 12px 30px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-size: 1.2rem;
+  border: 3px solid black;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.btn:hover {
+  transform: scale(1.1) rotate(3deg);
+  background: #d32f2f;
+}
+
+.floor {
+  width: 100%;
+  height: 15vh;
+  background: var(--floor-color);
+  border-top: 8px solid #3e2723;
+  z-index: 5;
+  position: relative;
+}
+
+.mouseHoleContainer {
+  position: absolute;
+  bottom: 15vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+}
+
+.hole {
+  width: 160px;
+  height: 180px;
+  background: var(--hole-black);
+  border-radius: 100px 100px 0 0;
+  border: 6px solid #d7ccc8;
+  border-bottom: none;
+  position: relative;
+  box-shadow: inset 0 20px 40px black;
+  transition: transform 0.2s;
+}
+
+.mouseHoleContainer:hover .eyes {
+  transform: scale(0.6) translateY(20px);
+  opacity: 0.7;
+}
+
+.eyes {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.eye {
+  width: 30px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  position: relative;
+  animation: blink 4s infinite;
+}
+
+.pupil {
+  width: 12px;
+  height: 12px;
+  background: black;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: lookAround 5s infinite;
+}
+
+.cheeseTrap {
+  position: absolute;
+  bottom: 15vh;
+  left: calc(50% + 120px);
+  z-index: 6;
+}
+
+.cheeseWedge {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 50px 90px;
+  border-color: transparent transparent var(--cheese-yellow) transparent;
+  position: relative;
+  filter: drop-shadow(2px 4px 4px rgba(0, 0, 0, 0.3));
+}
+
+.cheeseWedge::after {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background: var(--cheese-holes);
+  border-radius: 50%;
+  top: 25px;
+  left: -60px;
+  box-shadow: 20px 10px 0 var(--cheese-holes), 40px -5px 0 -3px var(--cheese-holes);
+}
+
+@keyframes blink {
+  0%, 96%, 100% { transform: scaleY(1); }
+  98% { transform: scaleY(0.1); }
+}
+
+@keyframes lookAround {
+  0%, 40% { transform: translate(-50%, -50%); }
+  50% { transform: translate(-80%, -50%); }
+  60% { transform: translate(-50%, -50%); }
+  70% { transform: translate(-20%, -50%); }
+  100% { transform: translate(-50%, -50%); }
+}
+
+.overlayImage1 {
+  position: absolute;
+  bottom: 68px;
+  left: 85%;
+  transform: translateX(-50%);
+  width: 500px;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.overlayImage2 {
+  position: absolute;
+  bottom: 15vh;
+  left: 15%;
+  transform: translateX(-50%);
+  width: 600px;
+  z-index: 7;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .title {
+    font-size: 5rem;
+  }
+  .cheeseTrap {
+    left: calc(50% + 60px);
+  }
+}
+
+@media (max-width: 768px) {
+  .overlayImage1,
+  .overlayImage2 {
+    display: none;
+  }
+}

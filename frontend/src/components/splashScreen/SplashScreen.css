@@ -1,0 +1,71 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.blur-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a, #2c2c2c, #1a1a1a);
+  filter: blur(10px);
+  z-index: -1;
+}
+
+.content {
+  z-index: 1;
+  text-align: center;
+}
+
+.splash-screen.fade-out {
+  opacity: 0;
+}
+
+.splash-screen h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.loading-bar {
+  width: 200px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 20px auto;
+}
+
+.progress {
+  height: 100%;
+  background-color: #61dafb;
+  transition: width 0.3s ease-out;
+}
+
+.splash-screen p {
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

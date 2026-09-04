@@ -1,0 +1,21 @@
+/* Animation for fading effect */
+@keyframes fade {
+    0% {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* Apply fade animation to images */
+  .animate-fade {
+    animation: fade 1s ease-in-out;
+  }
+  
+  .sidebar {
+    transition: transform 0.9s ease-in-out;
+  }
+
