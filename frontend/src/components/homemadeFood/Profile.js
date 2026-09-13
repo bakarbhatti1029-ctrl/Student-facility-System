@@ -12,6 +12,7 @@ const KitchenOwnerProfile = () => {
   const [editPicture, setEditPicture] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showProfilePicture, setShowProfilePicture] = useState(false);
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
@@ -56,6 +57,14 @@ const KitchenOwnerProfile = () => {
     <div className=' text-white'>
     <div className='flex flex-col justify-center items-center'>
     <p className="text-2xl font-bold text-center text-white mt-4"> {user.kitchen_name} Dashboard </p>
+      <button
+        type='button'
+        onClick={() => user.profile_picture && setShowProfilePicture(true)}
+        className='mb-4 flex h-24 w-24 overflow-hidden rounded-full border-4 border-[#697565] bg-gray-700'
+        aria-label='View profile picture'
+      >
+        {user.profile_picture ? <img className='h-full w-full object-cover' src={user.profile_picture} alt='Owner profile' /> : <span className='m-auto text-gray-300'>No photo</span>}
+      </button>
       <img className='w-full h-[500px]' src={user.kitchen_picture} alt={user.kitchen_name} />
       {!editMode && (
         <button
@@ -91,6 +100,14 @@ const KitchenOwnerProfile = () => {
         <p className='text-lg font-semibold'>{user.address}</p>
         <p className=''>Description:{user.kitchen_description}</p>
       </div>
+      {showProfilePicture && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4' onClick={() => setShowProfilePicture(false)}>
+          <div className='relative max-w-3xl max-h-[90vh]' onClick={(e) => e.stopPropagation()}>
+            <button type='button' onClick={() => setShowProfilePicture(false)} className='absolute -top-10 right-0 text-2xl text-white' aria-label='Close profile picture'>&times;</button>
+            <img src={user.profile_picture} alt='Owner profile' className='max-h-[85vh] max-w-full rounded-lg object-contain' />
+          </div>
+        </div>
+      )}
     </div>
     </div>
   );

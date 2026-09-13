@@ -1,6 +1,7 @@
 const Room = require('../../models/hostelowner/Hostelroom');
 const HostelOwner = require('../../models/hostelowner/Hostelowner');
 const Bed = require('../../models/hostelowner/RoomBed');
+const Booking = require('../../models/student/Booking');
 const logger = require('../../utils/logger');
 
 // Create a new room
@@ -109,7 +110,23 @@ exports.getRoomById = async (req, res, next) => {
         if (!room) {
             return res.status(404).json({ message: 'Room not found' });
         }
-        res.status(200).json(room);
+        // Older reserved beds may predate Bed.bookingStatus. Derive the label
+        // from the booking record so existing pending requests are not shown
+        // to students as fully occupied/approved.
+        const activeBookings = await Booking.find({
+            room_id: room._id,
+            status: { $in: ['Pending', 'Approved'] }
+        }).select('student_id status').lean();
+        const statusByStudent = new Map(
+            activeBookings.map(booking => [booking.student_id.toString(), booking.status])
+        );
+        const roomResponse = room.toObject();
+        roomResponse.beds = roomResponse.beds.map(bed => ({
+            ...bed,
+            bookingStatus: bed.bookingStatus || (bed.bookedBy ? statusByStudent.get(bed.bookedBy.toString()) : null),
+        }));
+
+        res.status(200).json(roomResponse);
     } catch (error) {
         console.error('Error fetching room:', error);
         res.status(500).json({ 

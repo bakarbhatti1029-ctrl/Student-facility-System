@@ -125,7 +125,12 @@ const getFilteredHostels = async (req, res) => {
 
     if (facilities && facilities.trim() !== '') {
       const facilityList = facilities.split(',').map((f) => f.trim()).filter(Boolean);
-      if (facilityList.length === 1) {
+      
+      // Handle "No Facility" as a special case
+      if (facilityList.includes('No Facility')) {
+        // Filter for hostels with empty or no facilities
+        filter.facilities = { $in: [[], null, ''] };
+      } else if (facilityList.length === 1) {
         filter.facilities = { $regex: new RegExp(facilityList[0], 'i') };
       } else if (facilityList.length > 1) {
         filter.facilities = { $all: facilityList.map((f) => new RegExp(`^${f}$`, 'i')) };
@@ -169,7 +174,7 @@ const getFilteredHostels = async (req, res) => {
           haversineKm(h.hostel_lat, h.hostel_lng, uni.lat, uni.lng).toFixed(2)
         ),
       }))
-      .filter((h) => maxDist == null || isNaN(maxDist) ? true : h.calculated_distance <= maxDist)
+      .filter((h) => !maxDist || isNaN(maxDist) || h.calculated_distance <= maxDist)
       .sort((a, b) => a.calculated_distance - b.calculated_distance);
 
     logger.debug(`Near ${uni.name}: ${withDistance.length} hostels`);

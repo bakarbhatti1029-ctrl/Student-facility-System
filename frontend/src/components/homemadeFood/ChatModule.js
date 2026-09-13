@@ -70,9 +70,9 @@ const ChatModule = ({ orderId, kitchenId, orderStatus }) => { // Add orderStatus
   };
 
   const getSenderLabel = (msgUserId) => {
-    if (msgUserId === userId) {
+    if (String(msgUserId) === String(userId)) {
       return "You";
-    } else if (msgUserId === kitchenId) {
+    } else if (String(msgUserId) === String(kitchenId)) {
       return "Chef";
     } else {
       return "Customer";

@@ -40,27 +40,27 @@ const HostelDetail = () => {
             <p className="text-base">{hostel.hostel_description}</p>
             <div className="mt-4">
               <h3 className="font-bold text-center text-xl mb-2">Rooms</h3>
-              <div className="flex justify-center items-center flex-wrap gap-4">
+              <div className="mt-6 gap-6 pb-8 flex flex-wrap justify-center items-stretch">
                 {/* Check if the hostel has rooms */}
                 {(hostel.rooms || []).length === 0 ? (
                   <p>No room found in this hostel.</p>
                 ) : (
                   (hostel.rooms || []).map((room) => (
-                    <div key={room._id} className="flex flex-col sm:flex-row border border-[#59636e] mb-4 w-full sm:w-[480px]">
-                      {!imageLoaded[room._id] && <Shimmer className="w-full h-48 sm:w-[200px] sm:h-[200px] flex-shrink-0" />}
+                    <div key={room._id} className="w-52 rounded mt-6 shadow-lg border border-[#59636e] flex flex-col">
+                      {!imageLoaded[room._id] && <Shimmer className="w-52 h-48 flex-shrink-0" />}
                       <img
                         src={room.imageUrls?.[0] || ''}
                         alt={`Room ${room.name}`}
-                        className={`w-full h-48 sm:w-[200px] sm:h-[200px] object-cover sm:mr-4 flex-shrink-0 ${imageLoaded[room._id] ? 'block' : 'hidden'}`}
+                        className={`w-52 h-48 object-cover flex-shrink-0 ${imageLoaded[room._id] ? 'block' : 'hidden'}`}
                         onLoad={() => handleImageLoad(room._id)}
                       />
-                      <div className="flex-1 min-w-0 p-6">
+                      <div className="text-center p-2 bg-[#25292e] flex flex-col flex-1">
                         <h4 className="font-bold text-lg mb-2">Room No: {room.name}</h4>
-                        <p className="mb-2">No. of Beds: {room.capacity}</p>
-                        <p className="mb-2">Price per Bed: PKR {room.price}</p>
+                        <p className="text-base">No. of Beds: {room.capacity}</p>
+                        <p className="text-base">Price per Bed: PKR {room.price}</p>
                         <button
                           onClick={() => handleRoomClick(room)}
-                          className="hover:bg-[#697565] bg-[#3C3D37] text-white p-2 rounded"
+                          className="bg-black hover:bg-[#3C3D37] mt-auto self-center text-white text-nowrap px-2 rounded"
                         >
                           View Details
                         </button>

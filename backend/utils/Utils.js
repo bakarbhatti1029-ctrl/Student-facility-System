@@ -40,14 +40,9 @@ exports.generateVerificationToken = () => {
 
 
 exports.maxTokenTime = () => { 
-        const now = new Date();
-        const fiveMinutesLater = new Date(now.getTime() + 5 * 60 * 1000);
-    
-        // Adjusting to PST (UTC+5)
-        const offsetInMillis = 5 * 60 * 60 * 1000; // PST is UTC+5
-        const fiveMinutesLaterPST = new Date(fiveMinutesLater.getTime() + offsetInMillis);
-    
-        return fiveMinutesLaterPST;
+        // Date stores an absolute point in time, so no timezone adjustment is
+        // needed. MongoDB and JavaScript will compare the UTC instants correctly.
+        return new Date(Date.now() + 5 * 60 * 1000);
 }
     
  

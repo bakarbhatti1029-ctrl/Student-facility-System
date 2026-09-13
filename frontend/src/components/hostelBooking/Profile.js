@@ -12,6 +12,7 @@ const Profile = () => {
   const [editPicture, setEditPicture] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showProfilePicture, setShowProfilePicture] = useState(false);
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
@@ -55,6 +56,14 @@ const Profile = () => {
   return (
     <div className='md:flex'>
       <div className='w-full md:w-[500px] pt-6 pl-6'>
+        <button
+          type='button'
+          onClick={() => user.profile_picture && setShowProfilePicture(true)}
+          className='mb-4 flex h-24 w-24 overflow-hidden rounded-full border-4 border-[#697565] bg-gray-700'
+          aria-label='View profile picture'
+        >
+          {user.profile_picture ? <img className='h-full w-full object-cover' src={user.profile_picture} alt='Owner profile' /> : <span className='m-auto text-gray-300'>No photo</span>}
+        </button>
         <img className='w-full h-auto md:h-[500px] object-cover' src={user.hostel_picture} alt={user.hostel_name} />
         {!editMode && (
           <button
@@ -85,6 +94,14 @@ const Profile = () => {
           </form>
         )}
       </div>
+      {showProfilePicture && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4' onClick={() => setShowProfilePicture(false)}>
+          <div className='relative max-w-3xl max-h-[90vh]' onClick={(e) => e.stopPropagation()}>
+            <button type='button' onClick={() => setShowProfilePicture(false)} className='absolute -top-10 right-0 text-2xl text-white' aria-label='Close profile picture'>&times;</button>
+            <img src={user.profile_picture} alt='Owner profile' className='max-h-[85vh] max-w-full rounded-lg object-contain' />
+          </div>
+        </div>
+      )}
       <div className='p-4 text-white text-center mt-20'>
         <h2 className='text-2xl font-bold'>{user.hostel_name}</h2>
         <p className='text-lg font-semibold'>{user.hostel_address}</p>

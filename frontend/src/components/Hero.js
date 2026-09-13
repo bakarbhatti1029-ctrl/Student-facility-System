@@ -80,7 +80,7 @@ const HeroSection = ({ topMarginClass = "mt-32" }) => {
             </Link>
           </div>
           <div className="image-container md:w-1/2  ">
-            <Link to="/home-made-food">
+            <Link to="/kitchens">
               <img
                 key={`hero2-${animationKey}`} // Dynamic key to trigger animation for image
                 src="/images/kitchens.png"

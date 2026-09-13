@@ -94,18 +94,18 @@ const ContactUs = () => {
             <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
             <div className="space-y-5">
               {[
-                { icon: <FaUser />, label: 'Developer', value: 'Aqib Awan (Aqib Ejaz)' },
+                { icon: <FaUser />, label: 'Developer', value: 'Aqib Awan (Aqib Ejaz)', href: 'https://aqibawan2003.netlify.app/', external: true },
                 { icon: <FaEnvelope />, label: 'Email', value: 'aqibawan0102@gmail.com', href: 'mailto:aqibawan0102@gmail.com' },
                 { icon: <FaPhone />, label: 'Phone', value: '+92-310-4693600', href: 'tel:+923104693600' },
                 { icon: <FaMapMarkerAlt />, label: 'Location', value: 'Shalimar College, Lahore, Pakistan' },
                 { icon: <FaClock />, label: 'Support Hours', value: 'Monday to Saturday, 9 AM to 6 PM PKT' },
-              ].map(({ icon, label, value, href }) => (
+              ].map(({ icon, label, value, href, external }) => (
                 <div key={label} className="flex items-start gap-4 bg-[#25292e] rounded-xl p-4">
                   <span className="text-2xl mt-0.5">{icon}</span>
                   <div>
                     <p className="font-semibold">{label}</p>
                     {href
-                      ? <a href={href} className="text-blue-400 hover:text-blue-300 transition">{value}</a>
+                      ? <a href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined} className="text-blue-400 hover:text-blue-300 transition">{value}</a>
                       : <p className="text-gray-400">{value}</p>}
                   </div>
                 </div>

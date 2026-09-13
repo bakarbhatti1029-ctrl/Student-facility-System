@@ -1,49 +1,244 @@
-# Student Facility System (SFS)
+<div align="center">
+  <img src="frontend/public/logo.png" alt="Student Facility System logo" width="110" />
 
-A web platform for managing student facilities (hostels, kitchens, and related bookings/payments), built as a final year project.
+  # Student Facility System
 
-**Developer:** Aqib Awan (Aqib Ejaz)
-**College:** Govt. Shalimar Graduate College, Lahore
+  **One platform for student accommodation, homemade food, bookings, payments, and campus life.**
 
-## Stack
+  [![Live Demo](https://img.shields.io/badge/Live_Demo-Open_App-22c55e?style=for-the-badge&logo=vercel&logoColor=white)](https://sfs-fyp.vercel.app/)
+  [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+  [![Node.js](https://img.shields.io/badge/Node.js-20-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](backend/LICENSE)
 
-| Layer      | Technology                     | Host          |
-|------------|---------------------------------|---------------|
-| Frontend   | React + Redux + Tailwind CSS    | Vercel        |
-| Backend    | Node.js + Express + Socket.IO   | Render        |
-| Database   | MongoDB Atlas                   | Atlas         |
-| Payments   | Stripe (PKR)                    | Stripe        |
-| Maps       | Leaflet + OpenStreetMap         | Free          |
+  A full-stack final-year project developed by **Aqib Awan (Aqib Ejaz)**<br />
+  Govt. Shalimar Graduate College, Lahore
+</div>
 
-## Project structure
+---
 
+## ✨ What is SFS?
+
+Student Facility System (SFS) brings essential student services into a single responsive web application. Students can discover nearby hostels, order homemade food, complete payments, communicate with providers, and manage their activity. Hostel owners, kitchen owners, and administrators receive dedicated tools for running their side of the platform.
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><img src="frontend/public/images/hostels.png" alt="Hostel discovery" width="390" /></td>
+      <td align="center"><img src="frontend/public/images/kitchens.png" alt="Homemade food discovery" width="390" /></td>
+    </tr>
+    <tr>
+      <td align="center"><strong>🏠 Hostel discovery and booking</strong></td>
+      <td align="center"><strong>🍲 Homemade food ordering</strong></td>
+    </tr>
+  </table>
+</div>
+
+## 🚀 Highlights
+
+| Area | Capabilities |
+|---|---|
+| 🔐 Authentication | Role-based registration, email OTP verification, login, and password recovery |
+| 🏠 Hostels | Search and filter listings, map-based discovery, room/bed availability, and booking management |
+| 🍲 Homemade food | Browse kitchens and dishes, manage a cart, place orders, and follow order progress |
+| 💳 Payments | Stripe-powered checkout for hostel bookings and food orders |
+| 💬 Communication | Real-time Socket.IO chat and status notifications |
+| ⭐ Community | Reviews and ratings for platform services |
+| 📍 Location | Leaflet maps, OpenStreetMap data, geocoding, and institute-aware discovery |
+| 📄 Receipts | Downloadable PDF invoices and transactional email attachments |
+| 🖼️ Media | Cloudinary-backed profile and listing image uploads |
+| 🛡️ Administration | Platform statistics, account moderation, listing management, and admin controls |
+
+## 👥 Built for every role
+
+- **Students** — find accommodation and food, book, order, pay, review, and track everything from one profile.
+- **Hostel owners** — publish hostels and rooms, manage bed availability, review booking requests, and monitor performance.
+- **Kitchen owners** — manage kitchens and dishes, process orders, and track sales activity.
+- **Administrators** — oversee users, providers, listings, platform metrics, and account access.
+
+## 🧰 Technology stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 18, Redux Toolkit, React Router, Tailwind CSS, Recharts |
+| Backend | Node.js 20, Express, Socket.IO, JWT, Helmet, Express Rate Limit |
+| Data | MongoDB, Mongoose |
+| Maps | Leaflet, React Leaflet, OpenStreetMap |
+| Payments | Stripe Elements and Stripe API |
+| Email | Brevo Transactional Email API |
+| Storage | Cloudinary |
+| Deployment | Vercel, Render, MongoDB Atlas |
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+    U[Student / Provider / Admin] --> F[React + Redux frontend]
+    F -->|REST API| B[Express backend]
+    F <-->|Real-time events| S[Socket.IO]
+    S --- B
+    B --> M[(MongoDB Atlas)]
+    B --> P[Stripe]
+    B --> E[Brevo Email API]
+    B --> C[Cloudinary]
+    B --> G[OpenStreetMap services]
 ```
-backend/    Express API, Socket.IO, MongoDB models, auth, payments
-frontend/   React app (Redux, Tailwind, Leaflet maps, Stripe checkout)
+
+## 📁 Project structure
+
+```text
+sfs/
+├── frontend/                 # React single-page application
+│   ├── public/               # Static assets, manifest, robots, and sitemap
+│   └── src/
+│       ├── components/       # Shared and feature components
+│       ├── screens/          # Main application pages
+│       ├── store/            # Redux slices and store
+│       └── utils/            # API, auth, receipt, and notification helpers
+├── backend/                  # Express and Socket.IO server
+│   ├── controllers/          # Business logic grouped by feature
+│   ├── models/               # Mongoose schemas
+│   ├── routes/               # API route definitions
+│   ├── middlewares/          # Authentication and error handling
+│   └── utils/                # Email, PDF, upload, and location helpers
+└── DEPLOYMENT_GUIDE.md       # Complete production deployment guide
 ```
 
-## Getting started locally
+## ⚡ Run locally
 
-### Backend
+### Prerequisites
+
+- Node.js 20+
+- npm
+- MongoDB locally or a MongoDB Atlas connection
+- Service credentials for the integrations you want to exercise
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/aqibawan2003/sfs.git
+cd sfs
 ```
+
+### 2. Start the backend
+
+```bash
 cd backend
 npm install
+```
+
+Copy `backend/.env.example` to `backend/.env`, configure the required values, and run:
+
+```bash
 npm run dev
 ```
 
-### Frontend
-```
+The API starts at `http://localhost:5000` by default.
+
+### 3. Start the frontend
+
+Open another terminal:
+
+```bash
 cd frontend
 npm install
+```
+
+Copy `frontend/.env.example` to `frontend/.env`, then run:
+
+```bash
 npm start
 ```
 
-Each app expects its own `.env` file (see `.env.example` if present, or `backend/README.md` / `frontend/README.md` for required variables).
+The application opens at `http://localhost:3000`.
 
-## Deployment
+## 🔑 Environment configuration
 
-See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for the full production deployment walkthrough (Render for backend, Vercel for frontend, MongoDB Atlas, Stripe setup, and the super admin creation steps).
+Never commit real credentials. Both applications include safe `.env.example` templates.
 
-## License
+### Backend
 
-See [backend/LICENSE](./backend/LICENSE).
+| Variable | Purpose |
+|---|---|
+| `MONGODB_URI` | MongoDB connection string |
+| `JWT_SECRET` | Secret used to sign authentication tokens |
+| `BREVO_API_KEY` | Brevo transactional email API key |
+| `BREVO_FROM` | Sender address verified in Brevo |
+| `STRIPE_SECRET_KEY` | Stripe server-side secret key |
+| `ALLOWED_ORIGIN` | Comma-separated frontend origins allowed by CORS |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+
+See [backend/.env.example](backend/.env.example) for optional settings and local-development defaults.
+
+### Frontend
+
+| Variable | Purpose |
+|---|---|
+| `REACT_APP_API_URL` | Public URL of the backend API |
+| `REACT_APP_STRIPE_PUBLIC_KEY` | Stripe publishable key |
+
+See [frontend/.env.example](frontend/.env.example) for the complete template.
+
+## 🧪 Useful commands
+
+| Command | Directory | Purpose |
+|---|---|---|
+| `npm start` | `frontend` | Start the React development server |
+| `npm run build` | `frontend` | Create an optimized production build |
+| `npm test` | `frontend` | Run frontend tests |
+| `npm run dev` | `backend` | Start the API with Nodemon |
+| `npm start` | `backend` | Start the production API |
+| `npm test` | `backend` | Run backend tests with Jest |
+
+## 🌐 Deployment
+
+The production architecture uses:
+
+- **Frontend:** Vercel
+- **Backend:** Render
+- **Database:** MongoDB Atlas
+- **Transactional email:** Brevo
+
+Read the [complete deployment guide](DEPLOYMENT_GUIDE.md) for environment configuration, service setup, and production deployment.
+
+## 🔒 Security notes
+
+- JWT-protected routes and role-aware authorization
+- Password hashing with bcrypt
+- Security headers through Helmet
+- Rate limiting on general and authentication endpoints
+- Server-side validation for sensitive requests
+- Secrets excluded from source control through `.gitignore`
+
+If a secret is ever exposed, revoke it at the provider, generate a replacement, and update the deployment environment immediately.
+
+## Team Members
+
+- Abubakr Bhatti
+- M. Sami
+
+## 🤝 Contributing
+
+Contributions and suggestions are welcome:
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/your-feature`.
+3. Commit your changes: `git commit -m "Add your feature"`.
+4. Push the branch: `git push origin feature/your-feature`.
+5. Open a pull request.
+
+## 📜 License
+
+This project is available under the [MIT License](backend/LICENSE).
+
+---
+
+<div align="center">
+  Built with care for students by <strong>Aqib Awan</strong> 💚
+  <br />
+  <a href="https://sfs-fyp.vercel.app/">Live application</a>
+  ·
+  <a href="DEPLOYMENT_GUIDE.md">Deployment guide</a>
+</div>

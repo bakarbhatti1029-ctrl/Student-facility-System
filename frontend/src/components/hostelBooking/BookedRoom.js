@@ -65,6 +65,12 @@ const BookedRoom = () => {
                 <p>
                   <span className="font-semibold text-gray-400">Booking Date:</span> {new Date(booking.bookingDate).toLocaleDateString()}
                 </p>
+                <p>
+                  <span className="font-semibold text-gray-400">Booking Status:</span>{' '}
+                  <span className={booking.status === 'Approved' ? 'text-green-500' : booking.status === 'Rejected' ? 'text-red-500' : 'text-yellow-400'}>
+                    {(booking.status || 'Pending').toUpperCase()}
+                  </span>
+                </p>
 
                 <ul className="list-none space-y-2">
                   {booking.beds.map((bed) => (

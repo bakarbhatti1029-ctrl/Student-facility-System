@@ -28,6 +28,7 @@ const StudentProfile = () => {
   const [editData, setEditData] = useState({});
   const [showFoodDetails, setShowFoodDetails] = useState(null);
   const [showBookingDetails, setShowBookingDetails] = useState(null);
+  const [showProfilePicture, setShowProfilePicture] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
 
   useEffect(() => {
@@ -140,11 +141,16 @@ const StudentProfile = () => {
 
         {/* Header card */}
         <div className="bg-[#25292e] rounded-2xl p-6 mb-6 flex flex-col md:flex-row items-center gap-6 shadow-lg">
-          <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#697565] flex-shrink-0 bg-gray-700 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => profileData.profilePicture && setShowProfilePicture(true)}
+            className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#697565] flex-shrink-0 bg-gray-700 flex items-center justify-center cursor-pointer"
+            aria-label="View profile picture"
+          >
             {profileData.profilePicture
               ? <img src={profileData.profilePicture} alt="Profile" className="w-full h-full object-cover" onError={e=>{e.target.style.display='none'}} />
               : <FaUser style={{ fontSize:'2.5rem', color:'#9ca3af' }} />}
-          </div>
+          </button>
           <div className="flex-grow text-center md:text-left">
             <h1 className="text-3xl font-bold">{profileData.name}</h1>
             <p className="text-gray-400 mt-1 flex items-center gap-2 justify-center md:justify-start"><FaEnvelope /> {profileData.email}</p>
@@ -156,6 +162,15 @@ const StudentProfile = () => {
             <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2"><FaSignOutAlt /> Logout</button>
           </div>
         </div>
+
+        {showProfilePicture && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowProfilePicture(false)}>
+            <div className="relative max-w-3xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+              <button type="button" onClick={() => setShowProfilePicture(false)} className="absolute -top-10 right-0 text-white text-2xl" aria-label="Close profile picture">&times;</button>
+              <img src={profileData.profilePicture} alt="Profile" className="max-h-[85vh] max-w-full rounded-lg object-contain" />
+            </div>
+          </div>
+        )}
 
         {/* Edit form */}
         {editMode && (

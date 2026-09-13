@@ -94,7 +94,7 @@ const connectSocket = (server) => {
         }
 
         const newMessage = {
-          userId: order.customerId,
+          userId: socket.user.id,
           kitchenId: order.kitchenOwnerId,
           message: message.trim(),
           timestamp: new Date(),

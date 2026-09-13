@@ -13,7 +13,7 @@ const getAllHostels = async (req, res, next) => {
                 select: 'name capacity price availability description imageUrls beds',
                 populate: {
                     path: 'beds',
-                    select: 'bed_number isBooked bookedBy paymentStatus',
+                    select: 'bed_number isBooked bookingStatus bookedBy paymentStatus',
                 },
             });
         

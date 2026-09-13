@@ -88,6 +88,9 @@ const validationSchemas = {
       .matches(/^\+92[0-9]{10}$/, 'Phone number must start with +92 followed by 10 digits')
       .required("Phone number is required"),
     address: Yup.string().required("Address is required"),
+    profile_picture: Yup.string()
+      .url("Invalid URL")
+      .required("Profile picture URL is required"),
     hostel_name: Yup.string().required("Hostel name is required"),
     hostel_type: Yup.string().required("Hostel type is required"),
     hostel_address: Yup.string().required("Hostel address is required"),
@@ -127,6 +130,9 @@ const validationSchemas = {
       .matches(/^\+92[0-9]{10}$/, 'Phone number must start with +92 followed by 10 digits')
       .required("Phone number is required"),
     address: Yup.string().required("Address is required"),
+    profile_picture: Yup.string()
+      .url("Invalid URL")
+      .required("Profile picture URL is required"),
     kitchen_name: Yup.string().required("Kitchen name is required"),
     kitchen_address: Yup.string().required("Kitchen address is required"),
     kitchen_description: Yup.string().required(
@@ -217,6 +223,7 @@ const RegistrationForm = () => {
           console.log("Adding hostel owner specific fields to payload");
           payload = {
             ...payload,
+            profile_picture: values.profile_picture,
             hostel_name: values.hostel_name || "Test Hostel",
             hostel_type: values.hostel_type || "male",
             hostel_address: values.hostel_address || values.address,
@@ -239,6 +246,7 @@ const RegistrationForm = () => {
         } else if (normalizedRole === 'kitchenowner') {
           payload = {
             ...payload,
+            profile_picture: values.profile_picture,
             kitchen_name: values.kitchen_name,
             kitchen_address: values.kitchen_address || values.address,
             kitchen_description: values.kitchen_description,
@@ -720,6 +728,16 @@ const RegistrationForm = () => {
                   ) : null}
                 </div>
 
+                <ImageUploadField
+                  label="Hostel Owner Profile Picture"
+                  name="profile_picture"
+                  value={formik.values.profile_picture}
+                  onChange={(url) => formik.setFieldValue('profile_picture', url)}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.profile_picture && formik.errors.profile_picture}
+                  uploadType="profile"
+                />
+
                 <div className="mb-4">
                   <label
                     htmlFor="hostel_type"
@@ -1022,6 +1040,16 @@ const RegistrationForm = () => {
                     </div>
                   ) : null}
                 </div>
+
+                <ImageUploadField
+                  label="Kitchen Owner Profile Picture"
+                  name="profile_picture"
+                  value={formik.values.profile_picture}
+                  onChange={(url) => formik.setFieldValue('profile_picture', url)}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.profile_picture && formik.errors.profile_picture}
+                  uploadType="profile"
+                />
 
                 <div className="mb-4">
                   <label

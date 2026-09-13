@@ -47,7 +47,7 @@ exports.sendOtp = async (req, res, next) => {
             const emailSubject = 'Password Reset - Student Facility System';
             const emailText = `Your OTP for password reset is: ${otp}
 
-This code will expire in 30 minutes.
+This code will expire in 5 minutes.
 
 If you did not request a password reset, please ignore this email or contact support.`;
 

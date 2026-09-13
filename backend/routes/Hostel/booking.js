@@ -22,6 +22,12 @@ router.get('/receipt/:bookingId', authenticateToken, bookingController.getBookin
 // Route to book a specific bed in a room
 router.post('/book/:hostelId/:roomId/:bedId',authenticateToken, bookingController.bookBed);
 
+// An owning hostel owner can make one final decision on a pending request.
+router.patch('/:bookingId/approve', authenticateToken, bookingController.approveBooking);
+router.patch('/:bookingId/reject', authenticateToken, bookingController.rejectBooking);
+router.patch('/:bookingId/complete', authenticateToken, bookingController.completeBooking);
+router.patch('/:bookingId/archive', authenticateToken, bookingController.archiveBooking);
+
 // Route to unbook a room
 router.delete('/unbookBed/:bookingId', authenticateToken, bookingController.unbookRoom);
 

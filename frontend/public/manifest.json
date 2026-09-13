@@ -1,0 +1,15 @@
+{
+  "short_name": "SFS",
+  "name": "Student Facility System",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#151a17",
+  "background_color": "#151a17"
+}

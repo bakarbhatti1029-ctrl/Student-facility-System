@@ -13,19 +13,11 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sfs-fyp.vercel.app/AboutUs</loc>
+    <loc>https://sfs-fyp.vercel.app/about-us</loc>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://sfs-fyp.vercel.app/ContactUs</loc>
+    <loc>https://sfs-fyp.vercel.app/contact-us</loc>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://sfs-fyp.vercel.app/register</loc>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sfs-fyp.vercel.app/loginform</loc>
-    <priority>0.4</priority>
   </url>
 </urlset>

@@ -1,125 +1,128 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { FaEdit, FaPlus, FaTrashAlt, FaUtensils } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import { fetchAllDishes, fetchItem, deleteItem } from '../../store/kitchenSlice';
 import KitchenOwnerNavbar from './KitchenOwnerNavbar';
 import { AddOrUpdateItemModal } from './AddOrUpdateItemModal';
 import ErrorState from '../common/ErrorState';
 
-const Shimmer = () => (
-  <div className="animate-pulse border ml-4 h-[580px]  mt-8 bg-gray-700 text-white">
-    <div className="bg-gray-400 h-48 w-full"></div>
-    <div className="p-4">
-      <div className="h-6 bg-gray-400 rounded w-3/4 mb-4"></div>
-      <div className="h-4 bg-gray-400 rounded w-1/2 mb-2"></div>
-      <div className="h-4 bg-gray-400 rounded w-1/2 mb-2"></div>
-      <div className="h-4 bg-gray-400 rounded w-full mb-2"></div>
-      <div className="h-4 bg-gray-400 rounded w-1/3"></div>
-    </div>
-    <div className="flex mt-8 ml-4">
-      <div className="bg-gray-400 h-10 w-20 rounded mr-2"></div>
-      <div className="bg-gray-400 h-10 w-20 rounded"></div>
+const DishSkeleton = () => (
+  <div className="animate-pulse overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+    <div className="h-52 bg-slate-800" />
+    <div className="space-y-3 p-5">
+      <div className="h-5 w-2/3 rounded bg-slate-700" />
+      <div className="h-4 w-1/3 rounded bg-slate-800" />
+      <div className="h-12 rounded bg-slate-800" />
     </div>
   </div>
 );
 
 const Dishes = () => {
   const dispatch = useDispatch();
-  const { dishes, loading, error } = useSelector((state) => state.kitchenItems);
-  const [modalState, setModalState] = useState({
-    isOpen: false,
-    action: 'Add',
-    payload: {},
-  });
+  const { dishes = [], loading, error } = useSelector(state => state.kitchenItems);
+  const [deletingId, setDeletingId] = useState(null);
+  const [modalState, setModalState] = useState({ isOpen: false, action: 'Add', payload: {} });
 
-  useEffect(() => {
-    dispatch(fetchAllDishes());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchAllDishes()); }, [dispatch]);
 
-  const handleEdit = (dishId) => {
-    dispatch(fetchItem(dishId)).then((result) => {
-      setModalState({
-        isOpen: true,
-        action: 'Edit',
-        payload: result.payload, // Ensure this contains the dish details
-      });
-    });
-  };
-  
+  const closeModal = () => setModalState({ isOpen: false, action: 'Add', payload: {} });
 
-  const handleDelete = (dishId) => {
-    dispatch(deleteItem(dishId));
+  const handleEdit = async dishId => {
+    try {
+      const dish = await dispatch(fetchItem(dishId)).unwrap();
+      setModalState({ isOpen: true, action: 'Edit', payload: dish });
+    } catch (err) {
+      toast.error(err?.message || 'Could not load this dish.');
+    }
   };
 
-  if (loading) {
-    // Show shimmer effect while data is loading
-    return (
-      <div className="flex min-h-screen">
-        <KitchenOwnerNavbar />
-        <div className="flex flex-wrap bg-black w-full pt-20 md:pt-0">
-          {[...Array(4)].map((_, index) => (
-            <Shimmer key={index} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) return (
-    <div className="flex bg-black min-h-screen">
-      <KitchenOwnerNavbar />
-      <div className="flex-1 pt-20 md:pt-0">
-        <ErrorState message={error} onRetry={() => dispatch(fetchAllDishes())} />
-      </div>
-    </div>
-  );
+  const handleDelete = async dish => {
+    if (!window.confirm(`Delete ${dish.name}? This cannot be undone.`)) return;
+    setDeletingId(dish._id);
+    try {
+      await dispatch(deleteItem(dish._id)).unwrap();
+      toast.success(`${dish.name} deleted.`);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Could not delete this dish.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
-    <div className="flex bg-black min-h-screen">
+    <div className="min-h-screen bg-[#111714] md:flex">
       <KitchenOwnerNavbar />
-      <div className="flex flex-wrap w-full pt-20 md:pt-0">
-        {dishes.map((item) => (
-          <div key={item._id} className="border ml-4   flex-grow w-full sm:w-[45%] lg:w-1/4 mt-8 text-white">
-            {item.imageUrls && item.imageUrls.length > 0 && (
-              <img src={item.imageUrls[0]} alt={item.name} className="w-full h-48" />
-            )}
-            <div className="p-4">
-              <h2 className="text-xl font-bold">{item.name}</h2>
-              <p>Price: PKR {item.price}</p>
-              <p>Category: {item.category}</p>
-              <p>Availability: {item.availability ? 'Available' : 'Not Available'}</p>
-              <p>{item.description}</p>
-            
-            <div className="flex mt-8  ml-4">
-              <button
-                onClick={() => handleEdit(item._id)}
-                className="bg-[#ECDFCC] hover:bg-[#D6C4B0] text-black px-4 py-2 rounded mr-2"
-              >
-                Edit
-              </button>
-              {modalState.isOpen && (
-                <AddOrUpdateItemModal
-                  action={modalState.action}
-                  payload={modalState.payload}
-                  handleClose={() => {
-                    setModalState({
-                      isOpen: false,
-                      payload: {},
-                      action: 'Add',
-                    });
-                  }}
-                />
-              )}
-              <button
-                onClick={() => handleDelete(item._id)}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-              >
-                Delete
-              </button>
+      <main className="min-w-0 flex-1 px-4 pb-12 pt-20 sm:px-6 md:px-8 md:pt-8 lg:px-10">
+        <div className="mx-auto max-w-7xl">
+          <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="mb-1 text-sm font-semibold uppercase tracking-[0.2em] text-amber-400">Kitchen management</p>
+              <h1 className="text-3xl font-bold text-white sm:text-4xl">Your menu</h1>
+              <p className="mt-2 text-sm text-slate-400">Manage dishes, prices, and availability from one place.</p>
             </div>
+            <button
+              onClick={() => setModalState({ isOpen: true, action: 'Add', payload: {} })}
+              className="flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300"
+            >
+              <FaPlus /> Add dish
+            </button>
+          </header>
+
+          {loading ? (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{[1, 2, 3].map(i => <DishSkeleton key={i} />)}</div>
+          ) : error ? (
+            <ErrorState message={error} onRetry={() => dispatch(fetchAllDishes())} />
+          ) : dishes.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-6 py-20 text-center">
+              <FaUtensils className="mx-auto mb-4 text-4xl text-slate-600" />
+              <h2 className="text-xl font-semibold text-white">Your menu is empty</h2>
+              <p className="mt-2 text-sm text-slate-500">Add your first dish to make it visible to customers.</p>
             </div>
-          </div>
-        ))}
-      </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {dishes.map(item => (
+                <article key={item._id} className="group flex min-h-full flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 shadow-xl shadow-black/10 transition hover:-translate-y-1 hover:border-slate-700">
+                  <div className="relative h-52 overflow-hidden bg-slate-800">
+                    {item.imageUrls?.[0] ? (
+                      <img src={item.imageUrls[0]} alt={item.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                    ) : (
+                      <div className="grid h-full place-items-center"><FaUtensils className="text-4xl text-slate-600" /></div>
+                    )}
+                    <span className={`absolute right-3 top-3 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur ${item.availability ? 'border-[#43534a] bg-[#222c27]/90 text-[#adc0b5]' : 'border-[#60494b] bg-[#302426]/90 text-[#d1aaad]'}`}>
+                      {item.availability ? 'Available' : 'Unavailable'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-1 flex-col p-5">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">{item.category || 'Uncategorized'}</p>
+                        <h2 className="truncate text-xl font-bold capitalize text-white" title={item.name}>{item.name}</h2>
+                      </div>
+                      <p className="shrink-0 text-lg font-bold text-amber-300">PKR {Number(item.price).toLocaleString()}</p>
+                    </div>
+                    <p className="mb-5 line-clamp-3 flex-1 text-sm leading-6 text-slate-400">{item.description || 'No description provided.'}</p>
+
+                    <div className="flex gap-3 border-t border-slate-800 pt-4">
+                      <button onClick={() => handleEdit(item._id)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-amber-400/60 hover:text-amber-300">
+                        <FaEdit /> Edit
+                      </button>
+                      <button disabled={deletingId === item._id} onClick={() => handleDelete(item)} className="flex items-center justify-center gap-2 rounded-lg border border-red-500/40 bg-red-500/5 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500 hover:text-white disabled:opacity-50">
+                        <FaTrashAlt /> {deletingId === item._id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {modalState.isOpen && (
+        <AddOrUpdateItemModal action={modalState.action} payload={modalState.payload} handleClose={closeModal} />
+      )}
     </div>
   );
 };

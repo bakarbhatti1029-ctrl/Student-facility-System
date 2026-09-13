@@ -264,6 +264,64 @@ const ConfirmDialog = ({ box, onClose }) => {
   );
 };
 
+const DetailItem = ({ label, value }) => value !== undefined && value !== null && value !== '' ? (
+  <div>
+    <p className="text-[10px] font-semibold uppercase tracking-[0.07em] mb-1" style={{ color: ink.faint }}>{label}</p>
+    <p className="text-[13px] break-words" style={{ color: ink.text }}>{String(value)}</p>
+  </div>
+) : null;
+
+const ListingDetails = ({ listing, onClose }) => {
+  if (!listing) return null;
+  const { type, data } = listing;
+  const isHostel = type === 'hostel';
+  const title = isHostel ? (data.hostelName || data.hostel_name) : data.kitchen_name;
+  const picture = isHostel ? (data.hostelPicture || data.hostel_picture || '/images/hostel.jpg') : (data.kitchen_picture || '/images/kitchens.png');
+  const owner = isHostel
+    ? `${data.hostel_owner_id?.first_name || ''} ${data.hostel_owner_id?.last_name || ''}`.trim()
+    : `${data.first_name || ''} ${data.last_name || ''}`.trim();
+  const email = isHostel ? data.hostel_owner_id?.email : data.email;
+  const phone = isHostel ? data.hostel_owner_id?.phone_number : data.phone_number;
+  const id = isHostel ? data.hostel_owner_id?.owner_id : data.provider_id;
+  const entries = isHostel ? (data.rooms || []) : (data.dishes || []);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="listing-details-title" onMouseDown={e=>{ if(e.target===e.currentTarget) onClose(); }} style={{ background: 'rgba(26,26,26,0.55)', backdropFilter: 'blur(3px)' }}>
+      <div className="w-full max-w-3xl max-h-full overflow-y-auto rounded-2xl" style={{ background: ink.surface, border: `1px solid ${ink.line}`, boxShadow: '0 24px 60px rgba(26,26,26,0.22)' }}>
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4" style={{ background: ink.surface, borderBottom: `1px solid ${ink.line}` }}>
+          <div><p className="text-[10px] uppercase font-bold tracking-wider" style={{ color: ink.brand }}>{isHostel ? 'Hostel details' : 'Kitchen details'}</p><h2 id="listing-details-title" className="text-xl font-bold" style={sans}>{title}</h2></div>
+          <button onClick={onClose} aria-label="Close details" className="p-2 rounded-lg hover:bg-black/5" style={{ color: ink.faint }}><FaTimes/></button>
+        </div>
+        <div className="p-5 md:p-6">
+          <img src={picture} alt={title} className="w-full h-56 md:h-72 rounded-xl object-cover mb-6" onError={e=>{e.currentTarget.style.display='none'}}/>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+            <DetailItem label="Owner" value={owner}/><DetailItem label="Provider ID" value={id}/>
+            <DetailItem label="Email" value={email}/><DetailItem label="Phone" value={phone}/>
+            <DetailItem label="Address" value={data.address || data.hostel_address}/>
+            {isHostel && <DetailItem label="Hostel type" value={data.hostelType || data.hostel_type}/>} 
+          </div>
+          <DetailItem label="Description" value={isHostel ? (data.description || data.hostel_description) : data.kitchen_description}/>
+          {isHostel && data.facilities?.length > 0 && <div className="mt-6"><p className="text-[10px] font-semibold uppercase tracking-[0.07em] mb-2" style={{ color: ink.faint }}>Facilities</p><div className="flex flex-wrap gap-2">{data.facilities.map((f,i)=><Pill key={`${f}-${i}`}>{f}</Pill>)}</div></div>}
+          <div className="mt-7 pt-6" style={{ borderTop: `1px solid ${ink.line}` }}>
+            <h3 className="font-bold text-[16px] mb-3" style={sans}>{isHostel ? `Rooms (${entries.length})` : `Menu (${entries.length})`}</h3>
+            {entries.length === 0 ? <p className="text-sm" style={{ color: ink.faint }}>No {isHostel ? 'rooms' : 'dishes'} have been added.</p> : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{entries.map((item,i)=>{
+                const availableBeds = isHostel ? (item.beds || []).filter(b=>!b.isBooked).length : null;
+                return <div key={item._id || i} className="rounded-xl p-4" style={{ background: ink.panel, border: `1px solid ${ink.line}` }}>
+                  <div className="flex justify-between gap-3"><h4 className="font-semibold text-sm">{item.name}</h4><Pill tone={item.availability === false ? 'muted' : 'strong'}>{item.availability === false ? 'Unavailable' : 'Available'}</Pill></div>
+                  <p className="text-[13px] font-bold mt-2" style={{ color: ink.brandDark }}>Rs. {Number(item.price || 0).toLocaleString()}</p>
+                  {isHostel ? <p className="text-xs mt-1" style={{ color: ink.sub }}>Capacity: {item.capacity || 0} · Beds available: {availableBeds}/{(item.beds || []).length}</p> : <p className="text-xs mt-1" style={{ color: ink.sub }}>{item.category}</p>}
+                  {item.description && <p className="text-xs mt-2 line-clamp-3" style={{ color: ink.faint }}>{item.description}</p>}
+                </div>;
+              })}</div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const navigate  = useNavigate();
   const token     = localStorage.getItem('adminToken');
@@ -280,9 +338,11 @@ const AdminDashboard = () => {
   const [kitchens,     setKitchens]     = useState([]);
   const [miniAdmins,   setMiniAdmins]   = useState([]);
   const [messages,     setMessages]     = useState([]);
+  const [subjectFilter, setSubjectFilter] = useState('');
   const [loading,      setLoading]      = useState(false);
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
   const [confirmBox,   setConfirmBox]   = useState(null);
+  const [selectedListing, setSelectedListing] = useState(null);
   const askConfirm = (message, onConfirm, tone = 'danger', confirmLabel, title) =>
     setConfirmBox({ message, onConfirm, tone, confirmLabel, title });
 
@@ -321,7 +381,7 @@ const AdminDashboard = () => {
   useEffect(() => { if (token) { fetchStats(); fetchGrowth(); fetchMessages(); if (isSuperAdmin) fetchMiniAdmins(); } }, [token]);
   useEffect(() => {
     if (!token) return;
-    setSearch('');
+    setSubjectFilter('');
     if (activeTab === 'students')      fetchStudents();
     else if (activeTab === 'hostelOwners')  fetchHostelOwners();
     else if (activeTab === 'kitchenOwners') fetchKitchenOwners();
@@ -357,7 +417,7 @@ const AdminDashboard = () => {
 
   const handleAddAdmin = async (e) => {
     e.preventDefault(); setRegError(''); setRegSuccess('');
-    if(miniAdmins.length>=MAX_MINI_ADMINS){setRegError(`Maximum ${MAX_MINI_ADMINS} mini admins allowed.`);return;}
+    if(miniAdmins.length>=MAX_MINI_ADMINS){setRegError(`This account can have up to ${MAX_MINI_ADMINS} additional administrators.`);return;}
     if(regForm.password!==regForm.confirmPassword){setRegError('Passwords do not match.');return;}
     if(regForm.password.length<6){setRegError('Password must be at least 6 characters.');return;}
     setRegLoading(true);
@@ -467,6 +527,16 @@ const AdminDashboard = () => {
   const hostelAddress = (hostel) => hostel.hostelAddress || hostel.hostel_address || hostel.address || hostel.location;
   const kitchenOwnerName = (kitchen) => `${kitchen.first_name || ''} ${kitchen.last_name || ''}`;
   const currentLabel = tabs.find(t=>t.key===activeTab)?.label || 'Overview';
+  const sectionDescriptions = {
+    overview: 'A current summary of users, services, and items awaiting review.',
+    students: 'Search student accounts and manage access.',
+    hostelOwners: 'Review applications and manage registered hostel providers.',
+    kitchenOwners: 'Review applications and manage registered food providers.',
+    hostels: 'View accommodation currently listed on the platform.',
+    kitchens: 'View food services currently listed on the platform.',
+    messages: 'Read and respond to enquiries submitted through the website.',
+    admins: 'Manage staff accounts with access to this dashboard.',
+  };
   const dateStr = new Date().toLocaleDateString('en-PK',{ weekday:'long', day:'numeric', month:'long', timeZone:'Asia/Karachi' });
 
   return (
@@ -479,7 +549,10 @@ const AdminDashboard = () => {
           <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 overflow-hidden">
             <img src="/images/logo.png" alt="" className="w-full h-full object-contain"/>
           </div>
-          <p style={{ ...sans, color: '#FFFFFF' }} className="font-bold text-[16px] leading-tight tracking-tight truncate">SFS Console</p>
+          <div className="min-w-0">
+            <p style={{ ...sans, color: '#FFFFFF' }} className="font-semibold text-[15px] leading-tight tracking-tight truncate">SFS Administration</p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em]" style={{ color: ink.sideFaint }}>Operations portal</p>
+          </div>
           <button className="ml-auto md:hidden flex-shrink-0" style={{ color: ink.sideFaint }} onClick={()=>setSidebarOpen(false)}><FaTimes/></button>
         </div>
 
@@ -522,7 +595,7 @@ const AdminDashboard = () => {
               </div>
             )}
             <p style={{ ...body, color: ink.sideText }} className="text-[12px] truncate flex-1">{adminData.email||'admin'}</p>
-            <span style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', ...body }} className="text-[9.5px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 uppercase">{isSuperAdmin?'Root':'Staff'}</span>
+            <span style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', ...body }} className="text-[9.5px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 uppercase">{isSuperAdmin?'Super admin':'Admin'}</span>
           </div>
           <button onClick={() => { setShowEditProfilePic(true); setPpError(''); setPpInput(myProfilePic); }}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition hover:bg-white/5" style={{ color: ink.sideText }}>
@@ -546,18 +619,22 @@ const AdminDashboard = () => {
 
       <div className="flex-1 flex flex-col min-w-0">
 
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-5 md:px-8 h-16" style={{ background: ink.side, borderBottom: `1px solid ${ink.sideLine}` }}>
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-5 md:px-8 h-16" style={{ background: 'rgba(255,255,255,0.96)', borderBottom: `1px solid ${ink.line}`, backdropFilter: 'blur(8px)' }}>
           <div className="flex items-center gap-3 min-w-0">
-            <button className="md:hidden flex-shrink-0" onClick={()=>setSidebarOpen(o=>!o)} style={{ color: ink.sideText }}><FaBars/></button>
-            <h1 style={{ ...sans, color: '#FFFFFF' }} className="text-[19px] md:text-[24px] font-bold tracking-tight truncate">{currentLabel}</h1>
+            <button className="md:hidden flex-shrink-0" onClick={()=>setSidebarOpen(o=>!o)} style={{ color: ink.text }}><FaBars/></button>
+            <h1 style={{ ...sans, color: ink.text }} className="text-[18px] md:text-[20px] font-semibold tracking-tight truncate">{currentLabel}</h1>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0" style={{ color: ink.sideText }}>
-            <FaCalendarAlt className="text-[13px]" style={{ color: ink.brandLight }}/>
+          <div className="flex items-center gap-2 flex-shrink-0" style={{ color: ink.sub }}>
+            <FaCalendarAlt className="text-[13px]" style={{ color: ink.brand }}/>
             <span style={body} className="text-[12.5px] md:text-[13px] font-medium hidden sm:inline">{dateStr}</span>
           </div>
         </header>
 
         <main className="flex-1 p-5 md:p-8 overflow-auto">
+
+          <div className="mb-6">
+            <p className="text-[13px] leading-5" style={{ color: ink.sub }}>{sectionDescriptions[activeTab]}</p>
+          </div>
 
           {activeTab === 'overview' && (
             <div>
@@ -572,7 +649,7 @@ const AdminDashboard = () => {
                 </button>
               )}
 
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                 {[
                   { label: 'Students', value: stats.totalStudents||0, icon: <FaUsers/> },
                   { label: 'Hostel Owners', value: stats.totalHostelOwners||0, icon: <FaHome/> },
@@ -582,15 +659,17 @@ const AdminDashboard = () => {
                   { label: 'Bookings', value: stats.totalBookings||0, icon: <FaCalendarCheck/> },
                   { label: 'Orders', value: stats.totalOrders||0, icon: <FaShoppingBag/> },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-xl p-5 transition-all duration-150 hover:-translate-y-0.5 shadow-sm hover:shadow-md"
+                  <div key={s.label} className="rounded-lg p-5 shadow-sm"
                     style={{ background: ink.surface, border: `1px solid ${ink.line}` }}>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3 text-[15px]" style={{ background: ink.brandDim, color: ink.brandDark }}>
-                      {s.icon}
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-[12px] font-medium" style={{ color: ink.sub }}>{s.label}</h3>
+                        <p style={{ ...sans, color: ink.text }} className="mt-2 text-[28px] font-semibold leading-none tracking-tight">{s.value.toLocaleString()}</p>
+                      </div>
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[14px]" style={{ background: ink.brandDim, color: ink.brandDark }}>
+                        {s.icon}
+                      </div>
                     </div>
-                    <p style={{ ...sans, color: ink.text }} className="text-[30px] font-bold leading-none tracking-tight mb-2">
-                      {s.value}
-                    </p>
-                    <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: ink.faint }}>{s.label}</h3>
                   </div>
                 ))}
               </div>
@@ -789,14 +868,14 @@ const AdminDashboard = () => {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
                       {rows.map(h=>(
-                        <div key={h._id} className="rounded-xl p-4 transition-all duration-150 hover:-translate-y-0.5 shadow-sm hover:shadow-md" style={{ background: ink.surface, border: `1px solid ${ink.line}` }}>
+                        <div key={h._id} role="button" tabIndex={0} aria-label={`View details for ${hostelTitle(h)}`} onClick={()=>setSelectedListing({type:'hostel',data:h})} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSelectedListing({type:'hostel',data:h});}}} className="rounded-xl p-4 cursor-pointer focus:outline-none focus:ring-2 transition-all duration-150 hover:-translate-y-0.5 shadow-sm hover:shadow-md" style={{ background: ink.surface, border: `1px solid ${ink.line}`, '--tw-ring-color': ink.brandLight }}>
                           <div className="relative h-32 rounded-lg overflow-hidden mb-3" style={{ background: ink.panel }}>
                             <img src={h.hostelPicture||h.hostel_picture||'/images/hostel.jpg'} alt={hostelTitle(h)} className="w-full h-full object-cover" onError={e=>{e.target.style.display='none'}}/>
                           </div>
                           <p style={{ ...body, color: ink.brand }} className="text-[10px] font-bold uppercase tracking-wider mb-1" >{hostelType(h)}</p>
                           <h3 className="font-bold text-[15px] leading-tight mb-1" style={{ color: ink.text }}>{hostelTitle(h)}</h3>
                           <p className="text-[12px] mb-4" style={{ color: ink.faint }}>{hostelOwnerName(h)}</p>
-                          <Action onClick={()=>removeHostel(h._id)} icon={<FaTrash/>} label="Remove" tone="danger"/>
+                          <div onClick={e=>e.stopPropagation()} onKeyDown={e=>e.stopPropagation()}><Action onClick={()=>removeHostel(h._id)} icon={<FaTrash/>} label="Remove" tone="danger"/></div>
                         </div>
                       ))}
                     </div>
@@ -826,13 +905,13 @@ const AdminDashboard = () => {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
                       {rows.map(k=>(
-                        <div key={k._id} className="rounded-xl p-4 transition-all duration-150 hover:-translate-y-0.5 shadow-sm hover:shadow-md" style={{ background: ink.surface, border: `1px solid ${ink.line}` }}>
+                        <div key={k._id} role="button" tabIndex={0} aria-label={`View details for ${k.kitchen_name}`} onClick={()=>setSelectedListing({type:'kitchen',data:k})} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSelectedListing({type:'kitchen',data:k});}}} className="rounded-xl p-4 cursor-pointer focus:outline-none focus:ring-2 transition-all duration-150 hover:-translate-y-0.5 shadow-sm hover:shadow-md" style={{ background: ink.surface, border: `1px solid ${ink.line}`, '--tw-ring-color': ink.brandLight }}>
                           <div className="relative h-32 rounded-lg overflow-hidden mb-3" style={{ background: ink.panel }}>
                             <img src={k.kitchen_picture||'/images/kitchens.png'} alt={k.kitchen_name} className="w-full h-full object-cover" onError={e=>{e.target.style.display='none'}}/>
                           </div>
                           <h3 className="font-bold text-[15px] leading-tight mb-1" style={{ color: ink.text }}>{k.kitchen_name}</h3>
                           <p className="text-[12px] mb-4 line-clamp-2" style={{ color: ink.faint }}>{k.kitchen_description}</p>
-                          <Action onClick={()=>removeKitchen(k._id)} icon={<FaTrash/>} label="Remove" tone="danger"/>
+                          <div onClick={e=>e.stopPropagation()} onKeyDown={e=>e.stopPropagation()}><Action onClick={()=>removeKitchen(k._id)} icon={<FaTrash/>} label="Remove" tone="danger"/></div>
                         </div>
                       ))}
                     </div>
@@ -844,7 +923,23 @@ const AdminDashboard = () => {
 
           {activeTab === 'messages' && (
             <div>
-              <p style={{ ...body, color: ink.faint }} className="text-[12.5px] mb-5">Contact Us submissions</p>
+              <div className="flex items-center justify-between mb-5">
+                <p style={{ ...body, color: ink.faint }} className="text-[12.5px]">Contact Us submissions</p>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium" style={{ color: ink.text }}>Filter by Subject:</label>
+                  <select
+                    value={subjectFilter}
+                    onChange={(e) => setSubjectFilter(e.target.value)}
+                    style={{ ...inputStyle }}
+                    className="px-3 py-2 rounded-lg text-sm"
+                  >
+                    <option value="">All Subjects</option>
+                    {[...new Set(messages.map(m => m.subject || 'General Inquiry'))].sort().map(subject => (
+                      <option key={subject} value={subject}>{subject}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               {loading ? (
                 <div className="space-y-2">{Array(4).fill(0).map((_,i)=><div key={i} className="h-24 rounded-xl animate-pulse" style={{ background: ink.surface, border: `1px solid ${ink.line}` }}/>)}</div>
@@ -854,7 +949,7 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {messages.map(m => {
+                  {messages.filter(m => subjectFilter === '' || (m.subject || 'General Inquiry') === subjectFilter).map(m => {
                     const digitsOnly = (m.phone || '').replace(/\D/g, '');
                     const whatsappNumber = digitsOnly.startsWith('92') ? digitsOnly : digitsOnly.startsWith('0') ? '92' + digitsOnly.slice(1) : digitsOnly;
                     const whatsappText = encodeURIComponent(`Hi ${m.name}, this is the SFS support team replying to your message about "${m.subject || 'your inquiry'}".`);
@@ -917,14 +1012,14 @@ const AdminDashboard = () => {
 
           {activeTab === 'admins' && isSuperAdmin && (
             <div className="space-y-4">
-              <p style={{ ...body, color: ink.faint }} className="text-[12.5px] -mt-1 mb-1">Manage mini admin accounts and access</p>
+              <p style={{ ...body, color: ink.faint }} className="text-[12.5px] -mt-1 mb-1">Manage administrator accounts and dashboard access.</p>
 
               <div className="rounded-xl p-5 flex items-center gap-4" style={{ background: ink.surface, border: `1px solid ${miniAdmins.length>=MAX_MINI_ADMINS ? '#3C3D37' : ink.line}`, boxShadow: '0 1px 3px rgba(26,26,26,0.05)' }}>
                 <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: miniAdmins.length>=MAX_MINI_ADMINS ? '#E4E4E1' : ink.brandDim }}>
                   <FaUserShield style={{ color: miniAdmins.length>=MAX_MINI_ADMINS ? ink.rust : ink.brand }}/>
                 </div>
                 <div className="flex-1">
-                  <h3 style={{ ...body, color: ink.text  }} className="text-[14px] font-bold" >{miniAdmins.length} / {MAX_MINI_ADMINS} admin slots used</h3>
+                  <h3 style={{ ...body, color: ink.text  }} className="text-[14px] font-bold" >{miniAdmins.length} of {MAX_MINI_ADMINS} administrator accounts in use</h3>
                   <p className="text-[12px] mt-0.5" style={{ color: ink.faint }}>
                     {miniAdmins.length>=MAX_MINI_ADMINS ? 'Limit reached — remove one to add another.' : `${MAX_MINI_ADMINS-miniAdmins.length} slot${MAX_MINI_ADMINS-miniAdmins.length!==1?'s':''} remaining`}
                   </p>
@@ -941,14 +1036,14 @@ const AdminDashboard = () => {
                 <FaExclamationTriangle className="mt-0.5 flex-shrink-0 text-[13px]" style={{ color: '#8A6D3B' }}/>
                 <p className="text-[12.5px] leading-relaxed" style={{ color: '#8A6D3B' }}>
                   A super admin account is created once via <code style={{ ...body, background: 'rgba(0,0,0,0.06)' }} className="px-1.5 py-0.5 rounded text-[11.5px]">POST /api/admin/register</code> before any admin exists (see <code style={{ ...body, background: 'rgba(0,0,0,0.06)' }} className="px-1.5 py-0.5 rounded text-[11.5px]">DEPLOYMENT_GUIDE.md</code>).
-                  From here you can only manage mini admins.
+                  Only additional administrator accounts can be managed here. The primary administrator account cannot be removed.
                 </p>
               </div>
 
               {showAddAdmin && (
                 <div className="rounded-xl p-6" style={{ background: ink.surface, border: `1px solid ${ink.line}`, boxShadow: '0 1px 3px rgba(26,26,26,0.05)' }}>
                   <div className="flex items-center justify-between mb-5">
-                    <h2 style={sans} className="font-bold text-[15px] flex items-center gap-2"><FaUserPlus style={{color:ink.brand}}/>{pendingAdminEmail ? 'Verify admin email' : 'Create mini admin'}</h2>
+                    <h2 style={sans} className="font-bold text-[15px] flex items-center gap-2"><FaUserPlus style={{color:ink.brand}}/>{pendingAdminEmail ? 'Verify email address' : 'Add administrator'}</h2>
                     <button onClick={()=>{setShowAddAdmin(false);setPendingAdminEmail('');setNewAdminOtp('');setRegSuccess('');}} style={{ color: ink.faint }}><FaTimes/></button>
                   </div>
                   {pendingAdminEmail ? (
@@ -984,12 +1079,12 @@ const AdminDashboard = () => {
               )}
 
               <div className="rounded-xl overflow-hidden" style={{ background: ink.surface, border: `1px solid ${ink.line}`, boxShadow: '0 1px 3px rgba(26,26,26,0.05)' }}>
-                <PanelHeader title="Mini admins" count={miniAdmins.length}/>
+                <PanelHeader title="Administrators" count={miniAdmins.length}/>
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
                     <thead style={{ background: ink.panel }}><tr>{['Name','Email','Role',''].map(h=><th key={h} className={thCls} style={{ borderBottom: `1px solid ${ink.line}`, color: ink.sub }}>{h}</th>)}</tr></thead>
                     <tbody>
-                      {miniAdmins.length===0 ? <EmptyRow cols={4} message="No mini admins created yet"/> : miniAdmins.map((a,i)=>(
+                      {miniAdmins.length===0 ? <EmptyRow cols={4} message="No additional administrators have been added"/> : miniAdmins.map((a,i)=>(
                         <tr key={a._id} className={`transition-colors duration-150 ${i%2===1 ? 'bg-[#F5F7F1]' : ''} hover:bg-[#EBEFE6]`} style={{ borderBottom: `1px solid ${ink.lineSoft}` }}>
                           <td className={tdCls}><span className="flex items-center gap-3"><Avatar name={a.first_name} src={a.profile_picture}/><span className="font-semibold" style={{ color: ink.text }}>{a.first_name} {a.last_name}</span></span></td>
                           <td className={tdCls} style={{ color: ink.sub }}><span className="flex items-center gap-2"><Avatar name={a.email} size="sm"/>{a.email}</span></td>
@@ -1010,29 +1105,13 @@ const AdminDashboard = () => {
           )}
         </main>
 
-        <footer style={{ background: '#1E201E', borderTop: '1px solid #3C3D37' }}>
-          <div className="px-5 md:px-8 py-6 flex flex-col md:flex-row md:items-start justify-between gap-6">
-            <div className="max-w-xs">
-              <p style={{ ...sans, color: '#FFFFFF' }} className="font-bold text-[15px] mb-1.5">Student Facility System</p>
-              <p style={{ ...body, color: '#9CA3A0' }} className="text-[12px] leading-relaxed">
-                Admin Console - managing approvals, users, and platform security.
-              </p>
+        <footer className="px-5 md:px-8 py-5" style={{ background: ink.surface, borderTop: `1px solid ${ink.line}` }}>
+          <div className="flex flex-col gap-2 text-[11.5px] sm:flex-row sm:items-center sm:justify-between" style={{ color: ink.faint }}>
+            <p>© {new Date().getFullYear()} Student Facility System</p>
+            <div className="flex items-center gap-4">
+              <a href="/" className="font-medium hover:underline" style={{ color: ink.sub }}>Open public website</a>
+              <a href="mailto:aqibawan0102@gmail.com" className="font-medium hover:underline" style={{ color: ink.sub }}>Technical support</a>
             </div>
-            <div className="flex flex-col gap-2">
-              <p style={{ ...sans, color: '#FFFFFF' }} className="font-semibold text-[12.5px] uppercase tracking-wide">Quick Links</p>
-              <a href="/" style={{ ...body, color: '#9CA3A0' }} className="text-[12.5px] transition hover:opacity-70">View Website</a>
-              <a href="mailto:aqibawan0102@gmail.com" style={{ ...body, color: '#9CA3A0' }} className="text-[12.5px] transition hover:opacity-70">Contact Support</a>
-            </div>
-            <div className="flex flex-col gap-2">
-              <p style={{ ...sans, color: '#FFFFFF' }} className="font-semibold text-[12.5px] uppercase tracking-wide">Developer</p>
-              <p style={{ ...body, color: '#9CA3A0' }} className="text-[12.5px]">Aqib Awan (Aqib Ejaz)</p>
-              <a href="tel:+923104693600" style={{ ...body, color: '#9CA3A0' }} className="text-[12.5px] transition hover:opacity-70">+92-310-4693600</a>
-            </div>
-          </div>
-          <div className="px-5 md:px-8 py-3.5 text-center" style={{ borderTop: '1px solid #3C3D37' }}>
-            <p style={{ ...body, color: '#6E7370' }} className="text-[11.5px]">
-              © {new Date().getFullYear()} Student Facility System. Developed by <a href="mailto:aqibawan0102@gmail.com" className="transition hover:opacity-70" style={{ color: '#9CA3A0', fontWeight: 600 }}>Aqib Awan</a>. All rights reserved.
-            </p>
           </div>
         </footer>
       </div>
@@ -1084,6 +1163,7 @@ const AdminDashboard = () => {
         </Modal>
       )}
 
+      <ListingDetails listing={selectedListing} onClose={()=>setSelectedListing(null)}/>
       <ConfirmDialog box={confirmBox} onClose={()=>setConfirmBox(null)}/>
     </div>
   );

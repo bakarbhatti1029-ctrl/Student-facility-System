@@ -15,7 +15,13 @@ export const processPayment = createAsyncThunk('payments/processPayment', async 
     });
     return response.data;
   } catch (error) {
-    return rejectWithValue(error.response.data);
+    return rejectWithValue(
+      error.response?.data || {
+        message: error.request
+          ? 'Unable to reach the booking server. Please check your connection and try again.'
+          : (error.message || 'Payment request failed. Please try again.')
+      }
+    );
   }
 });
 

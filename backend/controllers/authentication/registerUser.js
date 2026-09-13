@@ -262,7 +262,7 @@ exports.signUpUser = async (req, res, next) => {
       const emailSubject = 'Email Verification - Student Facility System';
       const emailText = `Your OTP for email verification is: ${otpString}
 
-This code will expire in 30 minutes.
+This code will expire in 5 minutes.
 
 Thank you for registering with Student Facility System!`;
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { processPayment } from '../../store/paymentSlice';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import Modal from 'react-modal';
@@ -20,6 +20,18 @@ const CheckoutModal = ({ isOpen, onClose, bed, room, hostelOwnerId, onSuccess })
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [stripeCardElement, setStripeCardElement] = useState(null);
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+
+  // Auto-populate user information when modal opens
+  useEffect(() => {
+    if (isOpen && user) {
+      const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+      setStudentName(fullName || user.name || '');
+      setStudentEmail(user.email || '');
+      setPhoneNumber(user.phone_number || '');
+      setIdCard(user.cnic || user.id_card_number || '');
+    }
+  }, [isOpen, user]);
 
   const stripe = useStripe();
   const elements = useElements();
@@ -38,6 +50,11 @@ const CheckoutModal = ({ isOpen, onClose, bed, room, hostelOwnerId, onSuccess })
   const handleSubmit = async (e) => {
     e.preventDefault();
     setPaymentError('');
+
+    if (!hostelOwnerId || hostelOwnerId === 'null') {
+        setPaymentError('Hostel information could not be loaded. Please close checkout, refresh the page, and try again.');
+        return;
+    }
 
     // Ensure the user has provided a valid ID card number
     if (!idCard || idCardError) {
@@ -168,8 +185,8 @@ const CheckoutModal = ({ isOpen, onClose, bed, room, hostelOwnerId, onSuccess })
             <input
               type="text"
               value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight"
+              readOnly
               required
             />
           </div>
@@ -178,8 +195,8 @@ const CheckoutModal = ({ isOpen, onClose, bed, room, hostelOwnerId, onSuccess })
             <input
               type="email"
               value={studentEmail}
-              onChange={(e) => setStudentEmail(e.target.value)}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight"
+              readOnly
               required
             />
           </div>
@@ -188,8 +205,8 @@ const CheckoutModal = ({ isOpen, onClose, bed, room, hostelOwnerId, onSuccess })
             <input
               type="tel"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight"
+              readOnly
               required
             />
           </div>
@@ -198,8 +215,8 @@ const CheckoutModal = ({ isOpen, onClose, bed, room, hostelOwnerId, onSuccess })
             <input
               type="text"
               value={idCard}
-              onChange={(e) => validateIdCard(e.target.value)}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight"
+              readOnly
               required
             />
             {idCardError && <p className="text-red-500 text-xs italic">{idCardError}</p>}

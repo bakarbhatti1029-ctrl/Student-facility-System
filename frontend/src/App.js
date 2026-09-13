@@ -1,6 +1,7 @@
 import './index.css';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import Home from './screens/Home';
 import Kitchens from './components/homemadeFood/Kitchens';
 import RegistrationForm from './components/Register';
@@ -44,18 +45,41 @@ function ScrollToTop() {
   return null;
 }
 
+const INDEXABLE_ROUTES = new Set([
+  '/',
+  '/hostel-booking',
+  '/kitchens',
+  '/about-us',
+  '/contact-us',
+]);
+
+// Keep account, checkout, dashboard, and unknown SPA routes out of search results.
+// These routes are useful to users but are not standalone search landing pages.
+function RouteIndexing() {
+  const { pathname } = useLocation();
+
+  if (INDEXABLE_ROUTES.has(pathname)) return null;
+
+  return (
+    <Helmet>
+      <meta name="robots" content="noindex, nofollow" />
+    </Helmet>
+  );
+}
+
 function App() {
   return (
     <div className="">
    
      <Router>
       <ScrollToTop />
+      <RouteIndexing />
       <Routes>
         <Route path="/" exact element={<Home/>} />
         <Route path="/otp" element={<OtpScreen/>} />
         <Route path="/reset-password" element={<ResetPasswordScreen/>} />
         <Route path="/hostel-booking" element={<HostelList/>} />
-        <Route path="/home-made-food" element={<Kitchens/>} />
+        <Route path="/home-made-food" element={<Navigate to="/kitchens" replace />} />
         <Route path="/rooms/:id" element={<RoomDetail/>} />
         <Route path='/register' element={<RegistrationForm/>}/>
         <Route path='/loginform' element={<LoginForm/>}/>
@@ -76,10 +100,12 @@ function App() {
         <Route path="/kitchen-owner/orders" element={<KitchenOwnerOrders/>} />
        <Route path='/hostelownerdashboard' element={<HostelOwnerDashboard/>}/>
        <Route path='/Mission' element={<Mission/>}/>
-       <Route path='/AboutUs' element={<AboutUs/>}/>
+       <Route path='/about-us' element={<AboutUs/>}/>
+       <Route path='/AboutUs' element={<Navigate to="/about-us" replace />}/>
        <Route path='/profile' element={<StudentProfile/>}/>
        <Route path='/booking' element={<HostelOwnerBookingBed/>}/>
-       <Route path='/ContactUs' element={<ContactUs/>}/>
+       <Route path='/contact-us' element={<ContactUs/>}/>
+       <Route path='/ContactUs' element={<Navigate to="/contact-us" replace />}/>
        <Route path='/kitchenownerdashboard' element={<KitchenOwnerDashboard/>}/>
 
        {/* Admin Routes */}

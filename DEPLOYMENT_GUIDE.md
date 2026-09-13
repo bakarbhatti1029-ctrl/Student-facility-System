@@ -96,26 +96,23 @@ Registration and profile forms now let people either **upload an image from thei
 
 ## Step 2c — Email Setup (OTP / verification emails)
 
-`backend/utils/emailService.js` sends OTP and notification emails through **SendGrid**, not through Gmail SMTP directly — this matters, and switching it was not optional:
+`backend/utils/emailService.js` sends OTP and notification emails through **Brevo's HTTPS API**, not through Gmail SMTP directly:
 
 > **Local development** originally used `nodemailer` over Gmail SMTP (port 587), and that still works fine on your own machine or on any host that allows outbound SMTP.
 >
-> **Render's free tier blocks outbound SMTP** (a common anti-spam restriction on free-tier hosts). The Gmail SMTP connection doesn't get refused — it just hangs indefinitely until the request times out, which is why this app now sends email over SendGrid's HTTPS API instead of raw SMTP. Render doesn't block outbound HTTPS, so this works there.
+> **Render's free tier blocks outbound SMTP** (a common anti-spam restriction on free-tier hosts), so this app uses Brevo over outbound HTTPS.
 
-The original nodemailer/Gmail code is **kept commented out** at the bottom of `emailService.js`, in case you ever deploy this backend somewhere that does allow outbound SMTP — just comment out the SendGrid block, uncomment the nodemailer block, and set `EMAIL` + `APP_PASSWORD` again.
-
-**Setting up SendGrid (free, no domain required):**
-1. Sign up free at https://signup.sendgrid.com
-2. Go to **Settings → Sender Authentication → Single Sender Verification** → add your email (e.g. your Gmail address) as a sender → confirm the verification email it sends you.
-   - Skipping this step, or using a provider like Resend without a verified domain, means you can only send test emails to your *own* address — not to real students registering with other emails.
-3. Go to **Settings → API Keys → Create API Key** → Full Access → copy the key (starts with `SG.`)
+**Setting up Brevo:**
+1. Create a Brevo account at https://www.brevo.com
+2. Go to **Settings → Senders, domains, IPs → Senders**, add your sender email, and complete verification.
+3. Go to **Settings → SMTP & API → API Keys**, generate a key, and copy it immediately.
 4. Set these two backend env vars:
    ```env
-   SENDGRID_API_KEY=SG.your_key_here
-   SENDGRID_FROM=your_verified_sender_email@gmail.com
+   BREVO_API_KEY=xkeysib-your_key_here
+   BREVO_FROM=your_verified_sender_email@gmail.com
    ```
 
-**Known limitation:** since the sender is a free Gmail address (not an authenticated custom domain — SPF/DKIM/DMARC), OTP emails may land in the recipient's spam folder. The OTP screen tells users to check spam. Fixing this properly requires owning a domain and authenticating it in SendGrid (Settings → Sender Authentication → Domain Authentication) — skip this if you don't need it for a demo/FYP.
+**Known limitation:** a Gmail sender cannot have its domain authenticated by you, so messages may land in spam. For production, use your own domain and authenticate it in Brevo; a verified Gmail sender is sufficient for a demo/FYP.
 
 ---
 
@@ -142,8 +139,8 @@ JWT_SECRET=your_long_random_secret_here
 EMAIL=aqibawan0102@gmail.com
 CONTACT_NOTIFY_EMAIL=aqibawan0102@gmail.com
 
-SENDGRID_API_KEY=SG.your_key_here
-SENDGRID_FROM=your_verified_sender_email@gmail.com
+BREVO_API_KEY=xkeysib-your_key_here
+BREVO_FROM=your_verified_sender_email@gmail.com
 
 STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
 
@@ -297,9 +294,9 @@ node resetSuperAdminPassword.js your@email.com "YourNewStrongPassword"
 | `MONGODB_URI`         | MongoDB Atlas connection string               | ✅ |
 | `JWT_SECRET`          | Long random string for JWT signing            | ✅ |
 | `EMAIL`               | Address used for the Contact Us notification destination | ✅ |
-| `SENDGRID_API_KEY`    | SendGrid API key — sends OTP/verification emails over HTTPS (Render blocks outbound SMTP, so Gmail/nodemailer only works locally — see Step 2c) | ✅ |
-| `SENDGRID_FROM`       | Your SendGrid-verified sender email (Single Sender Verification) | ✅ |
-| `APP_PASSWORD`        | Gmail App Password — only needed if you switch `emailService.js` back to the commented-out nodemailer/SMTP code (e.g. on a host that isn't Render) | Optional (local/SMTP only) |
+| `BREVO_API_KEY`       | Brevo API key used to send transactional emails over HTTPS | ✅ |
+| `BREVO_FROM`          | Your verified Brevo sender email | ✅ |
+| `APP_PASSWORD`        | Gmail App Password — only needed if you replace Brevo with nodemailer/SMTP | Optional (local/SMTP only) |
 | `CONTACT_NOTIFY_EMAIL` | Where Contact Us submissions get emailed. Defaults to `EMAIL` if unset | Optional |
 | `STRIPE_SECRET_KEY`   | Stripe secret key `sk_test_...`               | ✅ |
 | `ALLOWED_ORIGIN`      | Comma-separated frontend URL(s) for CORS + Socket.IO | ✅ |

@@ -43,7 +43,7 @@ exports.resendOTP = async (req, res, next) => {
             const emailSubject = 'Email Verification - Student Facility System (Resent)';
             const emailText = `Your new OTP for email verification is: ${otpString}
 
-This code will expire in 30 minutes.
+This code will expire in 5 minutes.
 
 Thank you for registering with Student Facility System!`;
 

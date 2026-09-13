@@ -18,7 +18,11 @@ export const bookRoom = createAsyncThunk('bookings/bookRoom', async ({ hostelId,
     });
     return { roomId, bed: response.data };
   } catch (error) {
-    return rejectWithValue(error.response.data);
+    return rejectWithValue(error.response?.data || {
+      message: error.request
+        ? 'Unable to reach the booking server. Please check your connection and try again.'
+        : (error.message || 'Booking failed. Please try again.')
+    });
   }
 });
 
@@ -40,6 +44,63 @@ export const fetchBookings = createAsyncThunk('bookings/fetchBookings', async (_
     });
   }
 });
+
+export const decideBooking = createAsyncThunk(
+  'bookings/decideBooking',
+  async ({ bookingId, decision }, { rejectWithValue }) => {
+    const token = Cookies.get('token');
+    try {
+      const response = await axios.patch(
+        `${API_BASE_URL}/api/bookings/${bookingId}/${decision}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return {
+        bookingId,
+        status: response.data.data.status,
+        message: response.data.message,
+        notificationSent: response.data.notificationSent,
+        notificationMessage: response.data.notificationMessage,
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to update booking status' });
+    }
+  }
+);
+
+export const completeBooking = createAsyncThunk(
+  'bookings/completeBooking',
+  async (bookingId, { rejectWithValue }) => {
+    const token = Cookies.get('token');
+    try {
+      const response = await axios.patch(
+        `${API_BASE_URL}/api/bookings/${bookingId}/complete`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return { bookingId, status: response.data.data.status, message: response.data.message };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to complete booking' });
+    }
+  }
+);
+
+export const archiveBooking = createAsyncThunk(
+  'bookings/archiveBooking',
+  async (bookingId, { rejectWithValue }) => {
+    const token = Cookies.get('token');
+    try {
+      const response = await axios.patch(
+        `${API_BASE_URL}/api/bookings/${bookingId}/archive`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return { bookingId, message: response.data.message };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Failed to remove history record' });
+    }
+  }
+);
 
 // Thunk to unbook a bed
 export const unbookRoom = createAsyncThunk('bookings/unbookRoom', async ({ roomId, bedId }, { rejectWithValue }) => {
@@ -88,7 +149,11 @@ export const fetchBookedRooms = createAsyncThunk(
       console.log('fetch Bookings:', response.data);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || {
+        message: error.request
+          ? 'Unable to reach the booking server. Please check your connection and try again.'
+          : (error.message || 'Failed to fetch booked rooms')
+      });
     }
   }
 );
@@ -162,6 +227,38 @@ const bookingsSlice = createSlice({
       .addCase(fetchBookings.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to fetch bookings';
+      })
+
+      .addCase(decideBooking.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(decideBooking.fulfilled, (state, action) => {
+        const { bookingId, status } = action.payload;
+        const booking = state.bookings.find(b => b.bookingId?.toString() === bookingId);
+        if (booking) {
+          booking.status = status;
+          if (status === 'Rejected' && booking.paymentStatus === 'completed') {
+            booking.paymentStatus = 'refunded';
+          }
+        }
+      })
+      .addCase(decideBooking.rejected, (state, action) => {
+        state.error = action.payload?.message || 'Failed to update booking status';
+      })
+      .addCase(completeBooking.fulfilled, (state, action) => {
+        const booking = state.bookings.find(b => b.bookingId?.toString() === action.payload.bookingId);
+        if (booking) booking.status = action.payload.status;
+      })
+      .addCase(completeBooking.rejected, (state, action) => {
+        state.error = action.payload?.message || 'Failed to complete booking';
+      })
+      .addCase(archiveBooking.fulfilled, (state, action) => {
+        state.bookings = state.bookings.filter(
+          booking => booking.bookingId?.toString() !== action.payload.bookingId
+        );
+      })
+      .addCase(archiveBooking.rejected, (state, action) => {
+        state.error = action.payload?.message || 'Failed to remove history record';
       })
 
       // Fetch Booked Rooms

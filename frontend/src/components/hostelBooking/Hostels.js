@@ -10,6 +10,7 @@ import InstituteAutocomplete from '../common/InstituteAutocomplete';
 import SEO from '../common/SEO';
 
 const ALL_FACILITIES = [
+  'No Facility',
   'Wi-Fi',
   'AC',
   'CCTV',
@@ -44,6 +45,7 @@ const HostelList = () => {
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [error, setError] = useState(null);
   const [facilityDropdownOpen, setFacilityDropdownOpen] = useState(false);
+  const [selectedHostel, setSelectedHostel] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,6 +60,19 @@ const HostelList = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!selectedHostel) return undefined;
+    const closeOnEscape = event => {
+      if (event.key === 'Escape') setSelectedHostel(null);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [selectedHostel]);
 
   // Fetch all hostels on initial load
   useEffect(() => {
@@ -166,7 +181,7 @@ const HostelList = () => {
 
   const facilityLabel =
     filters.facilities.length === 0
-      ? 'All Facilities'
+      ? 'No Facilities selected'
       : filters.facilities.length === ALL_FACILITIES.length
       ? 'All Selected'
       : `${filters.facilities.length} Selected`;
@@ -273,14 +288,14 @@ const HostelList = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 auto-rows-fr">
           {loading
             ? Array(6)
                 .fill(0)
                 .map((_, index) => <SkeletonCard key={index} />)
             : filteredHostels.length > 0
             ? filteredHostels.map((hostel) => (
-                <HostelCard key={hostel._id} hostel={hostel} />
+                <HostelCard key={hostel._id} hostel={hostel} onReadMore={setSelectedHostel} />
               ))
             : !loading && (
                 <p className="text-white col-span-full text-center text-xl mt-6">No hostels found</p>
@@ -295,6 +310,50 @@ const HostelList = () => {
           />
         )}
       </div>
+      {selectedHostel && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onMouseDown={event => { if (event.target === event.currentTarget) setSelectedHostel(null); }}
+          role="presentation"
+        >
+          <section role="dialog" aria-modal="true" aria-labelledby="hostel-details-title" className="max-h-[88vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-[#465047] bg-[#1E201E] text-white shadow-2xl">
+            <div className="relative h-52 bg-[#252a26] sm:h-64">
+              {selectedHostel.hostel_picture ? (
+                <img src={selectedHostel.hostel_picture} alt={selectedHostel.hostel_name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="grid h-full place-items-center text-gray-500">No hostel image</div>
+              )}
+              <button type="button" onClick={() => setSelectedHostel(null)} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-2xl leading-none text-white transition hover:bg-black" aria-label="Close hostel details">&times;</button>
+            </div>
+            <div className="max-h-[calc(88vh-13rem)] overflow-y-auto p-6 sm:max-h-[calc(88vh-16rem)] sm:p-8">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#c8b88f]">Hostel details</p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 id="hostel-details-title" className="text-2xl font-bold capitalize sm:text-3xl">{selectedHostel.hostel_name}</h2>
+                {selectedHostel.hostel_type && <span className="rounded-full border border-[#536057] bg-[#252d28] px-3 py-1 text-xs text-[#bdc8c0]">{selectedHostel.hostel_type}</span>}
+              </div>
+              <div className="mt-4 rounded-xl border border-[#3b433d] bg-[#252a26] px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Address</p>
+                <p className="mt-1 text-sm leading-6 text-gray-200">{selectedHostel.hostel_address || 'Address not provided'}</p>
+              </div>
+              <div className="mt-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">About this hostel</p>
+                <p className="mt-2 whitespace-pre-line text-sm leading-7 text-gray-300">{selectedHostel.hostel_description || 'No description available.'}</p>
+              </div>
+              <div className="mt-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Facilities</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(selectedHostel.facilities || []).length > 0
+                    ? selectedHostel.facilities.map(facility => <span key={facility} className="rounded-full border border-[#465047] bg-[#252a26] px-3 py-1.5 text-xs text-gray-300">{facility}</span>)
+                    : <span className="text-sm text-gray-500">No facilities listed.</span>}
+                </div>
+              </div>
+              <div className="mt-7 flex justify-end">
+                <button type="button" onClick={() => setSelectedHostel(null)} className="rounded-lg bg-[#ECDFCC] px-6 py-2.5 text-sm font-semibold text-[#1E201E] transition hover:bg-[#D6C4B0]">Close</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </>
   );
 };

@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../Navbar";
-import { bookRoom } from "../../store/bookingsSlice";
 import CheckoutModal from "./Checkout";
 import InvoiceModal from "./InvoiceModal";
 import Footer from "../Footer";
@@ -14,12 +12,10 @@ import API_BASE_URL from "../../utils/api";
 const RoomDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { id: roomId } = useParams(); // Get roomId from URL
 
   const locationState = location.state || {};
   const initialRoom = locationState.room || null;
-  const hostelId = locationState.hostelId || null;
 
   const [selectedBed, setSelectedBed] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -27,6 +23,12 @@ const RoomDetail = () => {
   const [roomData, setRoomData] = useState(initialRoom);
   const [loading, setLoading] = useState(!initialRoom && !!roomId); // Load only if no location state but roomId exists
   const [error, setError] = useState(null);
+  // Router state disappears after a refresh/direct URL visit. The room API
+  // always returns hostelId, so use it as the durable source of truth.
+  const hostelId = locationState.hostelId
+    || roomData?.hostelId?._id
+    || roomData?.hostelId
+    || null;
 
   // Fetch room data from backend on mount (if roomId exists)
   useEffect(() => {
@@ -109,9 +111,10 @@ const RoomDetail = () => {
   };
 
   const handleCheckoutSuccess = async (paymentData) => {
-    const updatedBed = { ...selectedBed, isBooked: true, paymentStatus: "completed" };
-    await dispatch(bookRoom({ hostelId, roomId: roomData._id, bed: updatedBed, paymentData }));
-    
+    const updatedBed = { ...selectedBed, isBooked: true, bookingStatus: "Pending", paymentStatus: "completed" };
+    // Checkout already created the booking through processPayment. Do not
+    // dispatch a second booking request here.
+
     // Refetch room data from backend to ensure UI shows current bed status
     // (in case another user booked a bed or the DB state changed)
     try {
@@ -161,9 +164,11 @@ const RoomDetail = () => {
                   {beds.map((bed, index) => (
                     <div key={bed.bed_number??index} className={`border border-[#59636e] p-4 rounded ${bed.isBooked?"bg-gray-200 text-gray-800":""}`}>
                       <p>Bed Number: {bed.bed_number??index+1}</p>
-                      <p>Status: {bed.isBooked?"Booked":"Available"}</p>
+                      <p>Status: {bed.isBooked ? (bed.bookingStatus === 'Pending' ? 'Pending Approval' : 'Booked') : 'Available'}</p>
                       {bed.isBooked
-                        ? <button className="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed mt-2" disabled>Occupied</button>
+                        ? <button className="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed mt-2" disabled>
+                            {bed.bookingStatus === 'Pending' ? 'Reserved - Pending Approval' : 'Occupied'}
+                          </button>
                         : <button onClick={()=>handleBookBedClick(bed)} className="bg-[#697565] hover:bg-[#3C3D37] text-white font-bold py-2 px-4 mt-2 rounded transition">Book Bed</button>
                       }
                     </div>

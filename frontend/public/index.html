@@ -6,8 +6,43 @@
     <meta name="theme-color" content="#15171A" />
     <meta name="description" content="Student Facility System - hostel accommodation and homemade food for students in Lahore" />
 
+    <!-- Critical styles are inline so this screen works before the main CSS
+         bundle arrives. The application stays hidden until that CSS is ready. -->
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #151a17; }
+      html:not(.app-styles-ready) #root { visibility: hidden; }
+      #app-boot {
+        position: fixed; inset: 0; z-index: 99999; display: flex;
+        align-items: center; justify-content: center; background: #151a17;
+        color: #e8e9e8; font-family: Arial, sans-serif;
+      }
+      .app-styles-ready #app-boot { display: none; }
+      .app-boot-content { width: min(320px, 82vw); text-align: center; }
+      .app-boot-mark {
+        width: 54px; height: 54px; margin: 0 auto 18px; border-radius: 16px;
+        display: grid; place-items: center; background: #252d28;
+        border: 1px solid #3d4841; color: #d2b55b; font-size: 22px; font-weight: 700;
+      }
+      .app-boot-title { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
+      .app-boot-message { margin: 0; color: #98a19b; font-size: 13px; line-height: 1.5; }
+      .app-boot-spinner {
+        width: 26px; height: 26px; margin: 20px auto 0; border-radius: 50%;
+        border: 3px solid #303934; border-top-color: #d2b55b;
+        animation: app-boot-spin .8s linear infinite;
+      }
+      #app-boot-retry {
+        display: none; margin: 18px auto 0; padding: 9px 18px; border: 0;
+        border-radius: 8px; background: #d2b55b; color: #151a17;
+        font-weight: 700; cursor: pointer;
+      }
+      #app-boot.app-boot-slow #app-boot-retry { display: block; }
+      #app-boot.app-boot-slow .app-boot-spinner { display: none; }
+      @keyframes app-boot-spin { to { transform: rotate(360deg); } }
+    </style>
+
     <link rel="icon" href="%PUBLIC_URL%/logo.png" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,6 +54,15 @@
   <body>
     
     <div id="root"></div>
+    <div id="app-boot" role="status" aria-live="polite">
+      <div class="app-boot-content">
+        <div class="app-boot-mark">SFS</div>
+        <p class="app-boot-title">Student Facility System</p>
+        <p id="app-boot-message" class="app-boot-message">Preparing your experience...</p>
+        <div class="app-boot-spinner" aria-hidden="true"></div>
+        <button id="app-boot-retry" type="button" onclick="window.location.reload()">Try again</button>
+      </div>
+    </div>
     <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.

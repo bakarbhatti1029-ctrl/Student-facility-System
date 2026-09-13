@@ -231,17 +231,31 @@ exports.getAllHostels = async (req, res) => {
     try {
         const Hostelowner = require('../../models/hostelowner/Hostelowner');
         const hostels = await Hostelowner.find({ isApproved: true }).select(
-            'first_name last_name hostel_name hostel_picture hostel_type hostel_address hostel_description facilities isApproved isBanned status'
-        );
+            'owner_id first_name last_name email phone_number hostel_name hostel_picture hostel_type hostel_address hostel_description facilities nearby_institutes rooms isApproved isBanned status createdAt'
+        ).populate({
+            path: 'rooms',
+            select: 'name capacity price availability description imageUrls beds',
+            populate: { path: 'beds', select: 'bed_number isBooked bookingStatus paymentStatus' }
+        });
         // Map fields to match frontend expectations
         const mapped = hostels.map(h => ({
             _id: h._id,
             hostelName: h.hostel_name,
             hostelPicture: h.hostel_picture,
             hostelType: h.hostel_type,
-            hostel_owner_id: { first_name: h.first_name, last_name: h.last_name },
+            hostel_owner_id: {
+                first_name: h.first_name,
+                last_name: h.last_name,
+                email: h.email,
+                phone_number: h.phone_number,
+                owner_id: h.owner_id,
+            },
             address: h.hostel_address,
+            description: h.hostel_description,
             facilities: h.facilities,
+            nearbyInstitutes: h.nearby_institutes,
+            rooms: h.rooms,
+            createdAt: h.createdAt,
         }));
         res.status(200).json(mapped);
     } catch (error) {
@@ -253,7 +267,9 @@ exports.getAllHostels = async (req, res) => {
 exports.getAllKitchens = async (req, res) => {
     try {
         const Kitchenowner = require('../../models/kitchenowner/Kitchenowner');
-        const kitchens = await Kitchenowner.find().select('-password');
+        const kitchens = await Kitchenowner.find({ isApproved: true })
+            .select('provider_id first_name last_name email phone_number kitchen_name address kitchen_description kitchen_picture dishes isApproved isBanned status createdAt')
+            .populate('dishes', 'name description price imageUrls category availability');
         res.status(200).json(kitchens);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });

@@ -1,5 +1,4 @@
-https://github.com/bakarbhatti1029-ctrl/Student-facility-System
-SFS// AddOrUpdateRoomModal.js
+// AddOrUpdateRoomModal.js
 import { useAddOrUpdateRoom } from "./useAddOrUpdateRoom";
 import InlineUploadButton from "../../common/InlineUploadButton";
 

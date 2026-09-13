@@ -89,7 +89,9 @@ const OtpScreen = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+      setTimeLeft(300);
       setMessage('OTP resent successfully');
+      setError('');
       setIsOtpExpired(false);
     } catch (error) {
       setError('Failed to resend OTP');

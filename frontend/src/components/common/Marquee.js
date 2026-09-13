@@ -3,10 +3,10 @@ import React from "react";
 const Marquee = ({ text, className = "" }) => {
   return (
     <div
-      className={`w-full text-white overflow-hidden whitespace-nowrap py-2 border-b border-[rgba(35,83,138,1)] ${className}`}
+      className={`w-full text-white overflow-hidden whitespace-nowrap py-2 border-b border-[#5a6a5a] ${className}`}
       style={{
         background:
-          "linear-gradient(to bottom, rgba(167,207,223,1) 0%, rgba(35,83,138,1) 64%)",
+          "linear-gradient(to bottom, rgba(152, 169, 152, 0.8) 0%, rgba(105, 117, 101, 1) 64%)",
       }}
     >
       <div className="flex animate-marquee hover:[animation-play-state:paused] w-max">
