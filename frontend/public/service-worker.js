@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sfs-shell-v1';
+const CACHE_NAME = 'sfs-shell-v2';
 const OFFLINE_PAGE_KEY = '/__sfs_offline_shell__';
 const CORE_ASSETS = ['/', '/logo.png', '/manifest.json'];
 
@@ -63,4 +63,31 @@ self.addEventListener('fetch', event => {
       }))
     );
   }
+});
+
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (_) { data = {}; }
+  event.waitUntil(self.registration.showNotification(data.title || 'SFS notification', {
+    body: data.body || 'You have a new update.',
+    icon: '/logo.png',
+    badge: '/logo.png',
+    tag: data.tag || 'sfs-update',
+    renotify: true,
+    vibrate: [200, 100, 200],
+    data: { url: data.url || '/' },
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || '/', self.location.origin).href;
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+    const existing = clients.find(client => client.url.startsWith(self.location.origin));
+    if (existing) {
+      existing.navigate(target);
+      return existing.focus();
+    }
+    return self.clients.openWindow(target);
+  }));
 });

@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import HostelNavbar from './HostelOwnerNavbar';
 import { archiveBooking, completeBooking, decideBooking, fetchBookings } from '../../store/bookingsSlice';
 import ErrorState from '../common/ErrorState';
+import ResponseCountdown from '../common/ResponseCountdown';
 
 const statusClass = {
   Pending: 'border-[#5a5548] bg-[#292820] text-[#d4c99d]',
@@ -277,7 +278,7 @@ const HostelOwnerBookingBed = () => {
                           />
                         )}
                         <StudentAvatar name={booking.studentName} src={booking.profilePicture} />
-                        <div className="min-w-0"><h2 className="truncate text-lg font-bold text-white">{booking.studentName}</h2><p className="text-xs text-slate-500">Requested {booking.bookingDate ? new Date(booking.bookingDate).toLocaleString() : 'recently'}</p></div>
+                        <div className="min-w-0"><h2 className="truncate text-lg font-bold text-white">{booking.studentName}</h2><p className="text-xs text-slate-500">Requested {booking.bookingDate ? new Date(booking.bookingDate).toLocaleString() : 'recently'}</p><ResponseCountdown deadline={booking.responseDeadline} pending={pending} label="Respond before" /></div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <span className={`rounded-full border px-3 py-1 text-xs font-medium ${statusClass[booking.status] || 'border-slate-600 bg-slate-800 text-slate-300'}`}>{statusLabel[booking.status] || 'Unknown'}</span>

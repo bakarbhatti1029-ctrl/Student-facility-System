@@ -9,6 +9,8 @@
   [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
   [![Node.js](https://img.shields.io/badge/Node.js-20-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
   [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+  [![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+  [![Web Push](https://img.shields.io/badge/Web_Push-Enabled-f97316?style=for-the-badge&logo=googlechrome&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/Push_API)
   [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](backend/LICENSE)
 
   A full-stack final-year project developed by **Aqib Awan (Aqib Ejaz)**<br />
@@ -42,7 +44,9 @@ Student Facility System (SFS) brings essential student services into a single re
 | 🏠 Hostels | Search and filter listings, map-based discovery, room/bed availability, and booking management |
 | 🍲 Homemade food | Browse kitchens and dishes, manage a cart, place orders, and follow order progress |
 | 💳 Payments | Stripe-powered checkout for hostel bookings and food orders |
-| 💬 Communication | Real-time Socket.IO chat and status notifications |
+| 🔔 Reliable alerts | PWA phone push, Socket.IO toast and sound, Brevo email fallback, and status updates |
+| ⏱️ Timely responses | Live owner-response countdowns with automatic request expiry and payment refunds |
+| 💬 Communication | Real-time Socket.IO chat between students and food providers |
 | ⭐ Community | Reviews and ratings for platform services |
 | 📍 Location | Leaflet maps, OpenStreetMap data, geocoding, and institute-aware discovery |
 | 📄 Receipts | Downloadable PDF invoices and transactional email attachments |
@@ -69,6 +73,48 @@ Student Facility System (SFS) brings essential student services into a single re
 | Storage | Cloudinary |
 | Deployment | Vercel, Render, MongoDB Atlas |
 
+## 🔔 Reliable booking and order alerts
+
+SFS does not require an owner to keep the dashboard open. Once a user installs SFS on their phone and taps **Enable phone alerts**, the application can deliver system notifications while it is open, minimized, or closed.
+
+| Event | Online experience | Away-from-app experience | Response protection |
+|---|---|---|---|
+| New food order | Instant toast and two-tone alert | PWA phone push and Brevo email | Kitchen has 10 minutes to confirm |
+| New hostel request | Instant toast and two-tone alert | PWA phone push and Brevo email | Hostel has 24 hours to decide |
+| Owner decision/status | Live Socket.IO update | Phone push and email where applicable | Student always sees the latest state |
+| No owner response | Live expiry update | Cancellation notification and email | Payment is refunded and the bed/order is released |
+
+Students and owners see a live countdown for pending requests. A backend expiry worker checks overdue requests every minute. Refund requests use idempotency protection so retrying the worker cannot intentionally create duplicate refunds.
+
+```mermaid
+sequenceDiagram
+    participant Student
+    participant SFS as SFS Backend
+    participant Owner
+    participant Push as Phone / PWA
+
+    Student->>SFS: Place paid order or bed request
+    SFS-->>Owner: Socket.IO toast + sound
+    SFS-->>Push: Web Push notification
+    SFS-->>Owner: Brevo email fallback
+    alt Owner responds before deadline
+        Owner->>SFS: Confirm, approve, or reject
+        SFS-->>Student: Live update + phone notification
+    else Deadline expires
+        SFS->>SFS: Cancel, refund, and release resource
+        SFS-->>Student: Live update + phone notification + email
+    end
+```
+
+### 📱 Enable notifications on a phone
+
+1. Open the deployed SFS website over HTTPS.
+2. Add SFS to the phone's Home Screen.
+3. Sign in and tap **Enable phone alerts** in the navigation menu.
+4. Select **Allow** when the phone asks for notification permission.
+
+Android supports installed PWA notifications through compatible browsers. On iPhone and iPad, install SFS on the Home Screen and use iOS/iPadOS 16.4 or later.
+
 ## 🏗️ Architecture
 
 ```mermaid
@@ -80,6 +126,7 @@ flowchart LR
     B --> M[(MongoDB Atlas)]
     B --> P[Stripe]
     B --> E[Brevo Email API]
+    B --> W[Web Push / VAPID]
     B --> C[Cloudinary]
     B --> G[OpenStreetMap services]
 ```
@@ -100,6 +147,7 @@ sfs/
 │   ├── models/               # Mongoose schemas
 │   ├── routes/               # API route definitions
 │   ├── middlewares/          # Authentication and error handling
+│   ├── services/             # Push delivery and request-expiry workers
 │   └── utils/                # Email, PDF, upload, and location helpers
 └── DEPLOYMENT_GUIDE.md       # Complete production deployment guide
 ```
@@ -169,8 +217,22 @@ Never commit real credentials. Both applications include safe `.env.example` tem
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary account cloud name |
 | `CLOUDINARY_API_KEY` | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `VAPID_PUBLIC_KEY` | Public VAPID key used to subscribe installed SFS apps to phone notifications |
+| `VAPID_PRIVATE_KEY` | Secret VAPID key used by the backend to send phone notifications |
+| `VAPID_SUBJECT` | Administrator contact URI, normally `mailto:you@example.com` |
+| `ORDER_RESPONSE_MINUTES` | Food-order confirmation window; defaults to `10` minutes |
+| `BOOKING_RESPONSE_HOURS` | Hostel-request decision window; defaults to `24` hours |
 
 See [backend/.env.example](backend/.env.example) for optional settings and local-development defaults.
+
+Generate one VAPID key pair for Web Push:
+
+```bash
+cd backend
+npx web-push generate-vapid-keys
+```
+
+Copy the generated public and private keys into local `backend/.env` and the Render backend environment. Keep `VAPID_PRIVATE_KEY` secret, never commit it, and do not regenerate the pair after users subscribe unless you intend to make them subscribe again.
 
 ### Frontend
 
@@ -214,10 +276,17 @@ Read the [complete deployment guide](DEPLOYMENT_GUIDE.md) for environment config
 
 If a secret is ever exposed, revoke it at the provider, generate a replacement, and update the deployment environment immediately.
 
-## Team Members
+## 👨‍💻 Project team
 
-- Abubakr Bhatti
-- M. Sami
+<div align="center">
+
+| Project author | Team members |
+|---|---|
+| **Aqib Awan (Aqib Ejaz)** | **Abubakr Bhatti** · **M. Sami** |
+
+**Govt. Shalimar Graduate College, Lahore**
+
+</div>
 
 ## 🤝 Contributing
 

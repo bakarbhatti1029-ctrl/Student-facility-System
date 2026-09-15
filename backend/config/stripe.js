@@ -49,6 +49,14 @@ if (MOCK_ENABLED) {
         return intents.get(id) || { ...makeIntent(), id, status: 'succeeded' };
       },
     },
+    refunds: {
+      create: async ({ payment_intent }) => ({
+        id: 're_mock_' + Date.now(),
+        object: 'refund',
+        payment_intent,
+        status: 'succeeded',
+      }),
+    },
   };
 } else {
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {

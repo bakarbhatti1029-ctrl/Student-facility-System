@@ -8,6 +8,7 @@ import Cookies from 'js-cookie';
 import ChatModule from './ChatModule';
 import API_BASE_URL from '../../utils/api';
 import ErrorState from '../common/ErrorState';
+import ResponseCountdown from '../common/ResponseCountdown';
 
 const KitchenOwnerOrders = () => {
   const dispatch = useDispatch();
@@ -92,6 +93,7 @@ const KitchenOwnerOrders = () => {
             <div className="p-4 shadow rounded flex flex-col md:flex-row justify-between gap-4">
               <div className= 'w-full md:w-1/2 p-2  rounded md:pr-8 md:mr-2 bg-[#25292e] border border-[#59636e]'>
                 <h3 className="text-lg font-bold">Order ID: {order._id}</h3>
+                <ResponseCountdown deadline={order.responseDeadline} pending={order.status === 'placed'} label="Confirm before" />
                 <div className="border p-4 mt-4">
                   <h4 className="font-bold mb-2">Summary</h4>
                   <p>Customer Name: {order.customerName}</p>

@@ -13,6 +13,7 @@ const mongoose = require('mongoose');
 
 const connectDB = require('./config/db');
 const connectSocket = require('./sockets/socket');
+const startRequestExpiryWorker = require('./services/requestExpiryService');
 
 const authUsers = require('./routes/authRoutes/authUsers');
 const profileRoutes = require('./routes/profileRoutes/profile');
@@ -31,6 +32,7 @@ const contactRoutes = require('./routes/contactRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const geoRoutes = require('./routes/geoRoutes');
+const pushNotificationRoutes = require('./routes/pushNotificationRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -111,6 +113,7 @@ connectDB();
 // Seed the self-growing known-institutes cache from universityResolver.js (safe — no-ops if already seeded)
 const seedKnownInstitutes = require('./seedKnownInstitutes');
 mongoose.connection.once('open', () => seedKnownInstitutes());
+mongoose.connection.once('open', () => startRequestExpiryWorker(io));
 
 // API Routes
 app.get('/', (req, res) => res.send('Hello World!'));
@@ -135,6 +138,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/geo', geoRoutes);
+app.use('/api/push', pushNotificationRoutes);
 
 // DB Connection Test Route
 app.get('/test-db', (req, res) => {

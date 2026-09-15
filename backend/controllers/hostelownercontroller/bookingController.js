@@ -9,6 +9,10 @@ const generateInvoicePdf = require('../../utils/generateInvoicePdf');
 const { uploadBufferToCloudinary, getSignedFileUrl } = require('../../utils/cloudinaryUpload');
 const sendEmail = require('../../utils/emailService');
 const mongoose = require('mongoose');
+const { sendPushToUser } = require('../../services/pushNotificationService');
+
+const BOOKING_RESPONSE_HOURS = Math.max(1, Number(process.env.BOOKING_RESPONSE_HOURS) || 24);
+const getBookingDeadline = () => new Date(Date.now() + BOOKING_RESPONSE_HOURS * 60 * 60 * 1000);
 
 // Controller function to book a bed and process payment
 exports.bookBed = async (req, res) => {
@@ -99,6 +103,7 @@ exports.bookBed = async (req, res) => {
                 hostel_id: hostelId,
                 booking_date: bedToBook.bookingDate,
                 status: 'Pending',
+                response_deadline: getBookingDeadline(),
             });
             await newBooking.save();
             return res.status(200).json({
@@ -131,6 +136,7 @@ exports.bookBed = async (req, res) => {
             hostel_id: hostelId,
             booking_date: bedToBook.bookingDate,
             status: 'Pending',
+            response_deadline: getBookingDeadline(),
         });
         await newBooking.save();
 
@@ -144,6 +150,31 @@ exports.bookBed = async (req, res) => {
             phone_number: student.phone_number,
             cnic: student.cnic,
         };
+
+        // Alert the owner in real time and by email, so the request is still
+        // noticed when their dashboard is closed.
+        req.app.get('io').to(`room-hostel${hostelOwner._id}`).emit('newBooking', {
+            _id: newBooking._id,
+            studentName: student ? `${student.first_name} ${student.last_name}` : 'A student',
+            roomName: room.name,
+            bedNumber: bedToBook.bed_number,
+            responseDeadline: newBooking.response_deadline,
+        });
+        await sendPushToUser(hostelOwner._id, {
+            title: 'New hostel booking request',
+            body: `${studentSummary ? `${studentSummary.first_name} ${studentSummary.last_name}` : 'A student'} requested Room ${room.name}, Bed ${bedToBook.bed_number}.`,
+            url: '/booking',
+            tag: `booking-${newBooking._id}`,
+        });
+        try {
+            await sendEmail(
+                hostelOwner.email,
+                `New SFS hostel booking request - respond within ${BOOKING_RESPONSE_HOURS} hours`,
+                `Hi ${hostelOwner.first_name}, ${studentSummary ? `${studentSummary.first_name} ${studentSummary.last_name}` : 'a student'} requested Bed ${bedToBook.bed_number} in ${room.name}. Please sign in and approve or reject it before ${newBooking.response_deadline.toLocaleString()}.`
+            );
+        } catch (notificationError) {
+            console.error('Hostel owner notification email failed:', notificationError.message);
+        }
 
         // Generate a PDF receipt, store it on Cloudinary, and email it to the
         // student. The card has already been charged at this point, so any
@@ -244,6 +275,7 @@ exports.getBookedRooms = async (req, res, next) => {
                     roomId: room._id,
                     roomName: room.name,
                     bookingDate: booking.booking_date,
+                    responseDeadline: booking.response_deadline,
                     status: booking.status,
                     beds: [] // Initialize beds array
                 };
@@ -359,6 +391,7 @@ exports.getHostelOwnerBookedBeds = async (req, res, next) => {
                 roomNumber: booking.room_name || room?.name || 'N/A',
                 bedNumber: booking.bed_number ?? bed?.bed_number ?? 'N/A',
                 bookingDate: booking.booking_date,
+                responseDeadline: booking.response_deadline,
                 status: booking.status,
                 paymentStatus: booking.payment_status || bed?.paymentStatus || (booking.status === 'Rejected' ? 'refunded' : 'unknown'),
                 studentName: student ? `${student.first_name} ${student.last_name}` : 'N/A',
@@ -420,6 +453,12 @@ const decideBooking = async (req, res, decision) => {
                 message: `This booking has already been ${booking.status.toLowerCase()}.`,
             });
         }
+        if (booking.response_deadline && new Date() > booking.response_deadline) {
+            return res.status(409).json({
+                success: false,
+                message: 'This booking request has expired and its refund is being processed.',
+            });
+        }
 
         const bed = await findBedForBooking(booking);
         if (!bed) {
@@ -476,6 +515,11 @@ const decideBooking = async (req, res, decision) => {
             status: decision,
             message: studentMessage,
         });
+        sendPushToUser(student._id, {
+            title: `Hostel booking ${decision.toLowerCase()}`,
+            body: studentMessage,
+            url: '/profile', tag: `booking-${booking._id}`,
+        }).catch(error => console.error('Booking decision push failed:', error.message));
         let notificationSent = false;
         if (student.email) {
             try {

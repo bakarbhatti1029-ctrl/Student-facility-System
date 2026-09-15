@@ -50,6 +50,11 @@ const connectSocket = (server) => {
       socket.join(`room-kitchen${kitchenId}`);
     });
 
+    socket.on('joinHostelRoom', (hostelId) => {
+      if (socket.user.role !== 'hostelOwner' || String(hostelId) !== String(socket.user.id)) return;
+      socket.join(`room-hostel${hostelId}`);
+    });
+
     socket.on('updateOrderStatus', (data) => {
       if (socket.user.role !== 'kitchenOwner' || !data?.userId) return;
       io.to(`room-user${data.userId}`).emit('orderUpdate', data);

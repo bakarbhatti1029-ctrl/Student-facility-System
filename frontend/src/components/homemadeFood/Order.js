@@ -8,6 +8,7 @@ import Footer from '../Footer';
 import { getOrdersForCustomer, updateOrderInState, removeOrder } from '../../store/orderSlice'; // Import the new action
 import ChatModule from './ChatModule'; // Import the ChatModule component
 import API_BASE_URL from '../../utils/api';
+import ResponseCountdown from '../common/ResponseCountdown';
 
 const OrderPage = () => {
   const dispatch = useDispatch();
@@ -80,13 +81,16 @@ const OrderPage = () => {
                 <div className="w-full md:w-1/2 p-2 rounded md:pr-8 md:mr-2 border border-[#59636e]">
                   <h2 className="text-xl font-bold mb-2">Order #{order._id.slice(-6).toUpperCase()}</h2>
                   <OrderDetails details={order} />
+                  <ResponseCountdown deadline={order.responseDeadline} pending={order.status === 'placed'} label="Kitchen confirmation time" />
                   <OrderList items={order.dishes} />
                 </div>
                 <div className="w-full md:w-1/2 bg-[#25292e] border border-[#59636e] shadow-[#25292e] text-white rounded">
                   <ChatModule orderId={order._id} kitchenId={order.kitchenOwnerId} orderStatus={order.status} />
                 </div>
               </div>
-              <OrderTracker status={order.status} orderPlaced={orderPlaced} />
+              {order.status === 'Cancelled' ? (
+                <p className="m-4 rounded bg-red-500/15 p-3 font-semibold text-red-300">Cancelled: {order.cancellationReason || 'The kitchen did not confirm this order.'}</p>
+              ) : <OrderTracker status={order.status} orderPlaced={orderPlaced} />}
               <button
                 onClick={() => deleteOrder(order._id)}
                 className="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded self-center mb-2 ml-2"

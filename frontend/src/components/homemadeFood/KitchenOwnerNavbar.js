@@ -6,6 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
 import API_BASE_URL from '../../utils/api';
 import { playNotificationSound } from '../../utils/playNotificationSound';
+import PushNotificationButton from '../common/PushNotificationButton';
 
 const OWNER_LINKS = [
   { label: 'Dashboard', to: '/kitchenownerdashboard' },
@@ -103,6 +104,7 @@ const KitchenOwnerNavbar = () => {
 
   const renderLinks = (onLinkClick) => (
     <>
+      <li className="px-3 py-2"><PushNotificationButton /></li>
       {OWNER_LINKS.map((link) => (
         <li key={link.label} className="text-white text-2xl font-semibold hover:bg-gray-900 px-3 py-2 rounded">
           <Link to={link.to} onClick={onLinkClick}>{link.label}</Link>

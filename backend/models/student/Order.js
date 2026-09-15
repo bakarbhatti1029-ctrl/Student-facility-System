@@ -24,13 +24,13 @@ const orderSchema = new Schema({
     // Previously this enum used lowercase single words that the app never wrote,
     // so enum validation was silently skipped on findByIdAndUpdate. Fixed to reflect
     // reality so runValidators:true can safely be enabled in the future.
-    enum: ['placed', 'Confirm Order', 'Preparing Order', 'Delivered', 'Completed'],
+    enum: ['placed', 'Expiring', 'Confirm Order', 'Preparing Order', 'Delivered', 'Completed', 'Cancelled'],
     default: 'placed',
     required: true
   },  // Order status
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'failed'],
+    enum: ['pending', 'paid', 'failed', 'refunded'],
     default: 'pending',
     required: true
   },  // Payment status
@@ -38,6 +38,10 @@ const orderSchema = new Schema({
   stripePaymentIntentId: { type: String },  // Used to verify payment status server-side
   deliveryAddress: { type: String, required: true },  // Address for delivery
   orderPlacedAt: { type: Date, default: Date.now, required: true },  // Date when the order was placed
+  responseDeadline: { type: Date, required: true, default: () => new Date(Date.now() + 10 * 60 * 1000) },
+  acceptedAt: { type: Date, default: null },
+  cancelledAt: { type: Date, default: null },
+  cancellationReason: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

@@ -9,6 +9,7 @@ import axios from "axios";
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../utils/api';
 import { readStoredAuth } from '../utils/auth';
+import PushNotificationButton from './common/PushNotificationButton';
 
 const Navbar = ({ module }) => {
   const dispatch = useDispatch();
@@ -195,6 +196,9 @@ const Navbar = ({ module }) => {
                 </div>
               )}
             </>
+          )}
+          {isLoggedIn && module !== 'home' && (
+            <div className="mt-3 min-w-48 md:mt-0"><PushNotificationButton /></div>
           )}
         </div>
       </div>

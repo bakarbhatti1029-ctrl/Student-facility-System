@@ -2,6 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import io from 'socket.io-client';
+import { jwtDecode } from 'jwt-decode';
+import { toast } from 'react-toastify';
+import API_BASE_URL from '../../utils/api';
+import { playNotificationSound } from '../../utils/playNotificationSound';
+import PushNotificationButton from '../common/PushNotificationButton';
 
 const OWNER_LINKS = [
   { label: 'Dashboard', to: '/hostelOwnerDashboard' },
@@ -38,6 +44,21 @@ const HostelNavbar = () => {
   }, []);
 
   useEffect(() => {
+    const token = Cookies.get('token');
+    if (!token) return;
+    const hostelId = jwtDecode(token).id;
+    const socket = io(API_BASE_URL, {
+      transports: ['websocket'], withCredentials: true, auth: { token },
+    });
+    socket.emit('joinHostelRoom', hostelId);
+    socket.on('newBooking', (booking) => {
+      toast.success(`New bed request from ${booking.studentName}!`);
+      playNotificationSound();
+    });
+    return () => socket.disconnect();
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -70,6 +91,7 @@ const HostelNavbar = () => {
 
   const renderLinks = (onLinkClick) => (
     <>
+      <li className="px-3 py-2"><PushNotificationButton /></li>
       {OWNER_LINKS.map((link) => (
         <li key={link.label} className="text-white text-2xl font-semibold hover:bg-gray-900 px-3 py-2 rounded">
           <Link to={link.to} onClick={onLinkClick}>{link.label}</Link>

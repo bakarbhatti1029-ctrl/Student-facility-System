@@ -4,6 +4,7 @@ import { fetchBookedRooms, removeBookingFromHistory } from '../../store/bookings
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import { downloadReceipt } from '../../utils/downloadReceipt';
+import ResponseCountdown from '../common/ResponseCountdown';
 
 const BookedRoom = () => {
   const dispatch = useDispatch();
@@ -51,6 +52,7 @@ const BookedRoom = () => {
           {bookedRooms.map((booking) => (
             <div key={booking.bookingId} className="bg-gray-800 p-6 flex flex-col justify-center gap-4 rounded-lg shadow-md border border-gray-600">
               <h3 className="text-xl text-yellow-400 font-bold">{booking.hostelName}</h3>
+              <ResponseCountdown deadline={booking.responseDeadline} pending={booking.status === 'Pending'} label="Hostel response time" />
 
               <div className="text-white space-y-2 text-center">
                 <p>

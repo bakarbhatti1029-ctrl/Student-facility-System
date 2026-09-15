@@ -1,8 +1,34 @@
 const Order = require('../../models/student/Order');
 const Student = require('../../models/student/Student'); // Import the Student model
 const Dish = require('../../models/kitchenowner/Dish');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const KitchenOwner = require('../../models/kitchenowner/Kitchenowner');
+const stripe = require('../../config/stripe');
+const sendEmail = require('../../utils/emailService');
+const { sendPushToUser } = require('../../services/pushNotificationService');
 const logger = require('../../utils/logger');
+
+const ORDER_RESPONSE_MINUTES = Math.max(1, Number(process.env.ORDER_RESPONSE_MINUTES) || 10);
+const getResponseDeadline = () => new Date(Date.now() + ORDER_RESPONSE_MINUTES * 60 * 1000);
+
+async function notifyKitchenOwner(kitchenOwnerId, order) {
+  try {
+    await sendPushToUser(kitchenOwnerId, {
+      title: 'New food order',
+      body: `${order.customerName} placed a PKR ${order.totalPrice} order. Confirm within ${ORDER_RESPONSE_MINUTES} minutes.`,
+      url: '/kitchen-owner/orders',
+      tag: `order-${order._id}`,
+    });
+    const owner = await KitchenOwner.findById(kitchenOwnerId).select('email first_name kitchen_name');
+    if (!owner?.email) return;
+    await sendEmail(
+      owner.email,
+      `New SFS food order - respond within ${ORDER_RESPONSE_MINUTES} minutes`,
+      `Hi ${owner.first_name}, a new paid order from ${order.customerName} has arrived for ${owner.kitchen_name}. Total: PKR ${order.totalPrice}. Please sign in and confirm it before ${order.responseDeadline.toLocaleString()}; otherwise it will be cancelled and refunded automatically.`
+    );
+  } catch (error) {
+    logger.error('Kitchen notification email failed:', error.message);
+  }
+}
 
 // Create order with an in-page Stripe PaymentIntent.
 // This replaces the old hosted-Checkout-redirect flow, which relied on a
@@ -91,6 +117,7 @@ exports.createOrder = async (req, res, next) => {
         paymentMethod,
         deliveryAddress,
         status: 'placed',
+        responseDeadline: getResponseDeadline(),
         stripePaymentIntentId: paymentIntent.id,
       });
       await pendingOrder.save();
@@ -122,6 +149,7 @@ exports.createOrder = async (req, res, next) => {
       paymentMethod,
       deliveryAddress,
       status: 'placed',
+      responseDeadline: getResponseDeadline(),
       stripePaymentIntentId: paymentIntent.id,
     });
 
@@ -135,6 +163,7 @@ exports.createOrder = async (req, res, next) => {
       ...newOrder.toObject(),
       customerId: { _id: customerId, phone_number: student.phone_number },
     });
+    await notifyKitchenOwner(kitchenOwnerId, newOrder);
 
     res.status(201).json({ success: true, requiresAction: false, order: newOrder });
   } catch (error) {
@@ -164,6 +193,7 @@ exports.confirmOrderPayment = async (req, res, next) => {
     }
 
     order.paymentStatus = 'paid';
+    order.responseDeadline = getResponseDeadline();
     await order.save();
 
     const io = req.app.get('io');
@@ -172,6 +202,7 @@ exports.confirmOrderPayment = async (req, res, next) => {
       ...order.toObject(),
       customerId: { _id: order.customerId, phone_number: student?.phone_number },
     });
+    await notifyKitchenOwner(order.kitchenOwnerId, order);
 
     res.status(200).json({ success: true, order });
   } catch (error) {
@@ -191,13 +222,26 @@ exports.updateOrderStatus = async (req, res, next) => {
       return res.status(403).json({ message: 'Not authorized to update this order' });
     }
 
+    if (order.status === 'Cancelled') {
+      return res.status(409).json({ message: 'This order has already been cancelled.' });
+    }
+    if (order.status === 'placed' && order.responseDeadline && new Date() > order.responseDeadline) {
+      return res.status(409).json({ message: 'This order has expired and can no longer be accepted.' });
+    }
+
     order.status = req.body.status;
+    if (req.body.status === 'Confirm Order' && !order.acceptedAt) order.acceptedAt = new Date();
     await order.save();
 
     const io = req.app.get('io'); // Get Socket.IO instance
 
     // Emit event to the user room
     io.to(`room-user${order.customerId}`).emit('orderUpdate', order);
+    sendPushToUser(order.customerId, {
+      title: `Food order: ${order.status}`,
+      body: `${order.kitchenName} updated your order to ${order.status}.`,
+      url: '/profile', tag: `order-${order._id}`,
+    }).catch(error => logger.error('Customer order push failed:', error.message));
 
     res.status(200).send({ message: "Order updated successfully", order });
   } catch (error) {
