@@ -58,7 +58,7 @@ const StudentProfile = () => {
         cnic: user.cnic || '',
         role,
       });
-      setEditData({ name: `${user.first_name||''} ${user.last_name||''}`.trim(), phone: user.phone_number||'', address: user.address||'', profilePicture: user.profile_picture||'' });
+      setEditData({ name: `${user.first_name || ''} ${user.last_name || ''}`.trim(), phone: user.phone_number || '', address: user.address || '', profilePicture: user.profile_picture || '' });
 
       // Food orders / hostel bookings only apply to student accounts.
       if (role === 'student') {
@@ -110,6 +110,12 @@ const StudentProfile = () => {
         address: res.data.address,
         profilePicture: res.data.profile_picture,
       }));
+
+      // naya code 3 lines ka
+      const updatedUser = { ...user, ...res.data };
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
+      dispatch(setCredentials({ token: authToken, user: updatedUser }));
+
       setEditMode(false);
     } catch (err) {
       console.error('Failed to save profile:', err);
@@ -123,13 +129,13 @@ const StudentProfile = () => {
   if (!profileData) return <div className="min-h-screen bg-[#1E201E] flex items-center justify-center"><p className="text-white">Please log in to view your profile.</p></div>;
 
   const profileFields = [
-    { label: 'Full Name',  value: profileData.name,             icon: <FaUser /> },
-    { label: 'Email',      value: profileData.email,            icon: <FaEnvelope /> },
-    { label: 'Phone',      value: profileData.phone || 'N/A',   icon: <FaPhone /> },
-    { label: 'Gender',     value: profileData.gender || 'N/A',  icon: <FaVenusMars /> },
+    { label: 'Full Name', value: profileData.name, icon: <FaUser /> },
+    { label: 'Email', value: profileData.email, icon: <FaEnvelope /> },
+    { label: 'Phone', value: profileData.phone || 'N/A', icon: <FaPhone /> },
+    { label: 'Gender', value: profileData.gender || 'N/A', icon: <FaVenusMars /> },
     // Kitchen owners' `address` field is their kitchen's address, not personal — don't show it here.
     ...(profileData.role !== 'kitchenOwner' ? [{ label: 'Address', value: profileData.address || 'N/A', icon: <FaMapMarkerAlt /> }] : []),
-    { label: 'CNIC',       value: profileData.cnic || 'N/A',    icon: <FaIdCard /> },
+    { label: 'CNIC', value: profileData.cnic || 'N/A', icon: <FaIdCard /> },
   ];
 
   const inputCls = "w-full bg-[#1E201E] border border-[#59636e] rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#697565]";
@@ -148,8 +154,8 @@ const StudentProfile = () => {
             aria-label="View profile picture"
           >
             {profileData.profilePicture
-              ? <img src={profileData.profilePicture} alt="Profile" className="w-full h-full object-cover" onError={e=>{e.target.style.display='none'}} />
-              : <FaUser style={{ fontSize:'2.5rem', color:'#9ca3af' }} />}
+              ? <img src={profileData.profilePicture} alt="Profile" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none' }} />
+              : <FaUser style={{ fontSize: '2.5rem', color: '#9ca3af' }} />}
           </button>
           <div className="flex-grow text-center md:text-left">
             <h1 className="text-3xl font-bold">{profileData.name}</h1>
@@ -178,10 +184,10 @@ const StudentProfile = () => {
             <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
             <form onSubmit={handleEditSave} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[['Full Name','name','text'],['Phone Number','phone','tel'], ...(profileData.role !== 'kitchenOwner' ? [['Address','address','text']] : [])].map(([label,key,type])=>(
+                {[['Full Name', 'name', 'text'], ['Phone Number', 'phone', 'tel'], ...(profileData.role !== 'kitchenOwner' ? [['Address', 'address', 'text']] : [])].map(([label, key, type]) => (
                   <div key={key}>
                     <label className="block text-sm text-gray-400 mb-1">{label}</label>
-                    <input type={type} value={editData[key]} onChange={e=>setEditData({...editData,[key]:e.target.value})} className={inputCls} />
+                    <input type={type} value={editData[key]} onChange={e => setEditData({ ...editData, [key]: e.target.value })} className={inputCls} />
                   </div>
                 ))}
               </div>
@@ -218,14 +224,14 @@ const StudentProfile = () => {
 
         {/* Tabs — food orders / hostel bookings only apply to student accounts */}
         {profileData.role === 'student' && (
-        <div className="flex gap-4 mb-4">
-          {[['orders','Food Orders',<FaUtensils />],['bookings','Hostel Bookings',<FaHome />]].map(([key,label,icon])=>(
-            <button key={key} onClick={()=>setActiveTab(key)}
-              className={`px-5 py-2 rounded-lg font-semibold capitalize transition flex items-center gap-2 ${activeTab===key?'bg-[#697565] text-white':'bg-[#25292e] text-gray-400 hover:bg-[#2f3438]'}`}>
-              {icon} {label}
-            </button>
-          ))}
-        </div>
+          <div className="flex gap-4 mb-4">
+            {[['orders', 'Food Orders', <FaUtensils />], ['bookings', 'Hostel Bookings', <FaHome />]].map(([key, label, icon]) => (
+              <button key={key} onClick={() => setActiveTab(key)}
+                className={`px-5 py-2 rounded-lg font-semibold capitalize transition flex items-center gap-2 ${activeTab === key ? 'bg-[#697565] text-white' : 'bg-[#25292e] text-gray-400 hover:bg-[#2f3438]'}`}>
+                {icon} {label}
+              </button>
+            ))}
+          </div>
         )}
 
         {/* Food Orders */}
@@ -233,32 +239,32 @@ const StudentProfile = () => {
           <div className="bg-[#25292e] rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FaUtensils /> Food Order History</h2>
             {foodOrders.length === 0
-              ? <div className="text-center py-12 text-gray-500"><FaUtensils style={{fontSize:'3rem',margin:'0 auto 12px'}} /><p>No food orders yet.</p></div>
+              ? <div className="text-center py-12 text-gray-500"><FaUtensils style={{ fontSize: '3rem', margin: '0 auto 12px' }} /><p>No food orders yet.</p></div>
               : <div className="space-y-4">
-                  {foodOrders.map((order,idx)=>(
-                    <div key={order._id||idx} className="bg-[#1E201E] rounded-xl p-4 border border-[#59636e]">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">Order #{(order._id||idx).toString().slice(-6)}</p>
-                          <p className="text-sm text-gray-400 mt-1 flex items-center gap-1"><FaCalendarAlt /> {order.createdAt?new Date(order.createdAt).toLocaleDateString('en-PK'):'N/A'}</p>
-                          <p className="text-green-400 font-bold mt-1 flex items-center gap-1"><FaMoneyBillWave /> PKR {order.totalAmount||order.total||0}</p>
-                          <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${order.status==='delivered'?'bg-green-900 text-green-300':order.status==='pending'?'bg-yellow-900 text-yellow-300':'bg-blue-900 text-blue-300'}`}>{order.status||'Processing'}</span>
-                        </div>
-                        <button onClick={()=>setShowFoodDetails(showFoodDetails===order._id?null:order._id)} className="text-blue-400 hover:text-blue-300 text-sm">{showFoodDetails===order._id?'Hide':'View Details'}</button>
+                {foodOrders.map((order, idx) => (
+                  <div key={order._id || idx} className="bg-[#1E201E] rounded-xl p-4 border border-[#59636e]">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold">Order #{(order._id || idx).toString().slice(-6)}</p>
+                        <p className="text-sm text-gray-400 mt-1 flex items-center gap-1"><FaCalendarAlt /> {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PK') : 'N/A'}</p>
+                        <p className="text-green-400 font-bold mt-1 flex items-center gap-1"><FaMoneyBillWave /> PKR {order.totalAmount || order.total || 0}</p>
+                        <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${order.status === 'delivered' ? 'bg-green-900 text-green-300' : order.status === 'pending' ? 'bg-yellow-900 text-yellow-300' : 'bg-blue-900 text-blue-300'}`}>{order.status || 'Processing'}</span>
                       </div>
-                      {showFoodDetails===order._id&&order.items&&(
-                        <div className="mt-4 border-t border-[#59636e] pt-4">
-                          {order.items.map((item,i)=>(
-                            <div key={i} className="flex justify-between text-sm py-1">
-                              <span>{item.name||item.dish_name}</span>
-                              <span className="text-green-400">PKR {item.price}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <button onClick={() => setShowFoodDetails(showFoodDetails === order._id ? null : order._id)} className="text-blue-400 hover:text-blue-300 text-sm">{showFoodDetails === order._id ? 'Hide' : 'View Details'}</button>
                     </div>
-                  ))}
-                </div>
+                    {showFoodDetails === order._id && order.items && (
+                      <div className="mt-4 border-t border-[#59636e] pt-4">
+                        {order.items.map((item, i) => (
+                          <div key={i} className="flex justify-between text-sm py-1">
+                            <span>{item.name || item.dish_name}</span>
+                            <span className="text-green-400">PKR {item.price}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             }
           </div>
         )}
@@ -268,33 +274,33 @@ const StudentProfile = () => {
           <div className="bg-[#25292e] rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><FaHome /> Hostel Booking History</h2>
             {bedBookings.length === 0
-              ? <div className="text-center py-12 text-gray-500"><FaHotel style={{fontSize:'3rem',margin:'0 auto 12px'}} /><p>No hostel bookings yet.</p></div>
+              ? <div className="text-center py-12 text-gray-500"><FaHotel style={{ fontSize: '3rem', margin: '0 auto 12px' }} /><p>No hostel bookings yet.</p></div>
               : <div className="space-y-4">
-                  {bedBookings.map((booking,idx)=>(
-                    <div key={booking.bookingId||idx} className="bg-[#1E201E] rounded-xl p-4 border border-[#59636e]">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-lg">{booking.hostelName||'Hostel'}</p>
-                          <p className="text-sm text-gray-400 flex items-center gap-1"><FaMapMarkerAlt /> {booking.hostelAddress||'N/A'}</p>
-                          <p className="text-sm mt-1 flex items-center gap-1"><FaBed /> Room: <span className="text-white ml-1">{booking.roomName}</span></p>
-                          <p className="text-sm flex items-center gap-1"><FaCalendarAlt /> {booking.bookingDate?new Date(booking.bookingDate).toLocaleDateString('en-PK'):'N/A'}</p>
-                          <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${booking.status==='Booked'?'bg-green-900 text-green-300':booking.status==='Cancelled'?'bg-red-900 text-red-300':'bg-yellow-900 text-yellow-300'}`}>{booking.status||'Pending'}</span>
-                        </div>
-                        <button onClick={()=>setShowBookingDetails(showBookingDetails===booking.bookingId?null:booking.bookingId)} className="text-blue-400 hover:text-blue-300 text-sm">{showBookingDetails===booking.bookingId?'Hide':'View Details'}</button>
+                {bedBookings.map((booking, idx) => (
+                  <div key={booking.bookingId || idx} className="bg-[#1E201E] rounded-xl p-4 border border-[#59636e]">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-lg">{booking.hostelName || 'Hostel'}</p>
+                        <p className="text-sm text-gray-400 flex items-center gap-1"><FaMapMarkerAlt /> {booking.hostelAddress || 'N/A'}</p>
+                        <p className="text-sm mt-1 flex items-center gap-1"><FaBed /> Room: <span className="text-white ml-1">{booking.roomName}</span></p>
+                        <p className="text-sm flex items-center gap-1"><FaCalendarAlt /> {booking.bookingDate ? new Date(booking.bookingDate).toLocaleDateString('en-PK') : 'N/A'}</p>
+                        <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${booking.status === 'Booked' ? 'bg-green-900 text-green-300' : booking.status === 'Cancelled' ? 'bg-red-900 text-red-300' : 'bg-yellow-900 text-yellow-300'}`}>{booking.status || 'Pending'}</span>
                       </div>
-                      {showBookingDetails===booking.bookingId&&booking.beds&&(
-                        <div className="mt-4 border-t border-[#59636e] pt-4">
-                          {booking.beds.map((bed,i)=>(
-                            <div key={i} className="text-sm py-1 flex gap-4 items-center">
-                              <FaBed /> Bed #{bed.bed_number}
-                              <span className={bed.isBooked?'text-red-400':'text-green-400'}>{bed.isBooked?'Booked':'Available'}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <button onClick={() => setShowBookingDetails(showBookingDetails === booking.bookingId ? null : booking.bookingId)} className="text-blue-400 hover:text-blue-300 text-sm">{showBookingDetails === booking.bookingId ? 'Hide' : 'View Details'}</button>
                     </div>
-                  ))}
-                </div>
+                    {showBookingDetails === booking.bookingId && booking.beds && (
+                      <div className="mt-4 border-t border-[#59636e] pt-4">
+                        {booking.beds.map((bed, i) => (
+                          <div key={i} className="text-sm py-1 flex gap-4 items-center">
+                            <FaBed /> Bed #{bed.bed_number}
+                            <span className={bed.isBooked ? 'text-red-400' : 'text-green-400'}>{bed.isBooked ? 'Booked' : 'Available'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             }
           </div>
         )}

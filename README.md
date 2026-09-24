@@ -13,7 +13,7 @@
   [![Web Push](https://img.shields.io/badge/Web_Push-Enabled-f97316?style=for-the-badge&logo=googlechrome&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/Push_API)
   [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](backend/LICENSE)
 
-  A full-stack final-year project developed by **Aqib Awan (Aqib Ejaz)**<br />
+  A full-stack final-year project developed by **Muhammad Sami**<br />
   Govt. Shalimar Graduate College, Lahore
 </div>
 
@@ -164,7 +164,7 @@ sfs/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/aqibawan2003/sfs.git
+git clone  https://github.com/MSCodes-148/Student-Facility-System.git #https://github.com/aqibawan2003/sfs.git
 cd sfs
 ```
 
@@ -305,7 +305,7 @@ This project is available under the [MIT License](backend/LICENSE).
 ---
 
 <div align="center">
-  Built with care for students by <strong>Aqib Awan</strong> 💚
+  Built with care for students by <strong>Muhammad Sami</strong> 💚
   <br />
   <a href="https://sfs-fyp.vercel.app/">Live application</a>
   ·

@@ -126,7 +126,7 @@ function detectIntent(msg) {
     if (/\b(foods?|meals?|dish(es)?|eat|kitchens?|menus?|orders?|lunch|dinner|breakfast|khana|roti|biryani|karahi)\b/.test(m)) return 'food';
 
     if (/\b(price|cost|fee|rate|charge|pkr|rupee|how much|kitna|total)\b/.test(m)) return 'pricing';
-    if (/\b(contact|phone|email|reach|number|call|support|help|aqib)\b/.test(m)) return 'contact';
+    if (/\b(contact|phone|email|reach|number|call|support|help|sami)\b/.test(m)) return 'contact';
     if (/how (to|do|does|can)\b|\b(work|use|register|signup|sign up|login|kaise|start)\b/.test(m)) return 'howto';
     if (/\b(pay|payment|stripe|jazzcash|easypaisa|card|transaction)\b/.test(m)) return 'payment';
     if (/\b(booking|book|reserve|confirm|booked|meri booking)\b/.test(m)) return 'booking_status';
@@ -159,9 +159,9 @@ What can I help you with?`;
 function contactResponse() {
     return `*Contact & Support*
 
-Developer: Aqib Awan
-Email: aqibawan0102@gmail.com
-Phone: +92-310-4693600
+Developer: Muhammad Sami
+Email: mscodes148@gmail.com
+Phone: +92-318-4183886
 Location: Shalimar College, Lahore, Pakistan
 
 Support hours: Monday – Saturday, 9 AM – 6 PM PKT`;
@@ -204,7 +204,7 @@ EasyPaisa — coming soon`;
 
 function farewellResponse() {
     return `Thanks for using SFS. If you need anything else, I'm here.
-Email: aqibawan0102@gmail.com | Phone: +92-310-4693600`;
+Email: mscodes148@gmail.com | Phone: +92-318-4183886`;
 }
 
 function facilitiesResponse() {
@@ -232,7 +232,7 @@ To view your current bookings:
 
 For food orders, go to *Profile* → *My Orders*.
 
-Need help? Contact: +92-310-4693600`;
+Need help? Contact: +92-318-4183886`;
 }
 
 function cancelResponse() {
@@ -245,7 +245,7 @@ To cancel a hostel booking:
 
 Note: refund policies depend on the hostel owner. Contact the hostel directly for refund queries.
 
-Support: aqibawan0102@gmail.com`;
+Support: mscodes148@gmail.com`;
 }
 
 function unknownResponse(userMessage) {
@@ -505,7 +505,7 @@ exports.handleMessage = async (req, res) => {
                 const totalBeds = await RoomBed.countDocuments();
 
                 if (hostels.length === 0) {
-                    reply = `No approved hostels listed yet. Check back soon or contact +92-310-4693600.`;
+                    reply = `No approved hostels listed yet. Check back soon or contact +92-318-4183886.`;
                 } else {
                     const ratings = await getRatingsMap('hostel', hostels.map(h => h._id));
                     const list = hostels.map(h => {
@@ -572,7 +572,7 @@ exports.handleMessage = async (req, res) => {
     } catch (error) {
         console.error('Chatbot error:', error);
         return res.json({
-            reply: `I'm having trouble fetching live data right now.\n\nFor immediate help:\nEmail: aqibawan0102@gmail.com\nPhone: +92-310-4693600`
+            reply: `I'm having trouble fetching live data right now.\n\nFor immediate help:\nEmail: mscodes148@gmail.com\nPhone: +92-318-4183886`
         });
     }
 };

@@ -4,6 +4,10 @@
 const dotenv = require('dotenv');
 dotenv.config();
 
+// Fix for querySrv ECONNREFUSED on some networks (mobile hotspot, ISP DNS block)
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

@@ -62,7 +62,7 @@ function ChatBot() {
       setMessages((prev) => [
         ...prev,
         {
-          text: 'Could not reach the server. Please try again. Contact: +92-310-4693600',
+          text: 'Could not reach the server. Please try again. Contact: +92-318-4183886',
           sender: 'bot',
         },
       ]);

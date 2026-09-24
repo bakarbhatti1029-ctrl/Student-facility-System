@@ -27,7 +27,7 @@ const Navbar = ({ module }) => {
     if (token && user) {
       dispatch(setCredentials({ token, user }));
       setIsLoggedIn(true);
-      return;
+      // return;
     }
 
     if (token) {

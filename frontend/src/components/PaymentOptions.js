@@ -1,5 +1,5 @@
 // Payment Options Component with JazzCash and EasyPaisa (Locked)
-// Author: AQIB AWAN
+// Author: MUHAMMAD SAMI
 //
 // ─────────────────────────────────────────────────────────────────────────────
 // HOW TO ENABLE JazzCash or EasyPaisa LATER (one-line change):

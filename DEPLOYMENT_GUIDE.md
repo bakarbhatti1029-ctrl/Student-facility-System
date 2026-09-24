@@ -1,8 +1,8 @@
 # Student Facility System (SFS) — Deployment Guide
 
-**Developer:** Aqib Awan (Aqib Ejaz)
-**Email:** aqibawan0102@gmail.com
-**Phone:** +92-310-4693600
+**Developer:** Muhammad Sami 
+**Email:** mscodes148@gmail.com
+**Phone:** +92-318 4183886
 **College:** Govt. Shalimar Graduate College, Lahore
 
 ---
@@ -136,8 +136,8 @@ MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/sfs
 
 JWT_SECRET=your_long_random_secret_here
 
-EMAIL=aqibawan0102@gmail.com
-CONTACT_NOTIFY_EMAIL=aqibawan0102@gmail.com
+EMAIL=mscodes148@gmail.com
+CONTACT_NOTIFY_EMAIL=mscodes148@gmail.com
 
 BREVO_API_KEY=xkeysib-your_key_here
 BREVO_FROM=your_verified_sender_email@gmail.com
@@ -249,9 +249,9 @@ POST https://sfs-backend.onrender.com/api/admin/register
 Content-Type: application/json
 
 {
-  "first_name": "Aqib",
-  "last_name": "Awan",
-  "email": "aqibawan0102@gmail.com",
+  "first_name": "Muhammad",
+  "last_name": "Sami",
+  "email": "mscodes148@gmail.com",
   "password": "your_admin_password",
   "confirmPassword": "your_admin_password"
 }
@@ -261,7 +261,7 @@ Run this once via Postman, curl, or Thunder Client:
 ```bash
 curl -X POST https://sfs-backend.onrender.com/api/admin/register \
   -H "Content-Type: application/json" \
-  -d '{"first_name":"Aqib","last_name":"Awan","email":"aqibawan0102@gmail.com","password":"your_admin_password","confirmPassword":"your_admin_password"}'
+  -d '{"first_name":"Muhammad","last_name":"Sami","email":"mscodes148@gmail.com","password":"your_admin_password","confirmPassword":"your_admin_password"}'
 ```
 
 **Step by step:**
@@ -564,8 +564,8 @@ The chatbot now understands these types of questions:
 | Booking | "My booking", "Meri booking" |
 | Cancel | "Cancel booking", "Wapas karna" |
 | Facilities | "Wi-Fi hostel", "AC room", "Generator" |
-| Contact | "Help", "Support", "Aqib contact" |
+| Contact | "Help", "Support", "Sami contact" |
 
 ---
 
-Built with ❤️ by Aqib Awan — Final Year Project, Govt. Shalimar Graduate College, Lahore
+Built with ❤️ by Muhammad Sami — Final Year Project, Govt. Shalimar Graduate College, Lahore
