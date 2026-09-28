@@ -4,9 +4,26 @@ const PendingRegistration = require('../../models/PendingRegistration');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+const { setSessionCookie, setCsrfCookie } = require('../../utils/sessionCookie');
+const { getSessionToken, clearSessionCookie } = require('../../utils/sessionCookie');
 const logger = require('../../utils/logger');
 const sendEmail = require('../../utils/emailService');
 const { generateVerificationToken, maxTokenTime } = require('../../utils/Utils');
+
+const sendSuperAdminVerification = async (admin) => {
+    const otp = generateVerificationToken().toString();
+    admin.email_verified = false;
+    admin.verification_token = otp;
+    admin.verification_token_time = maxTokenTime();
+    await admin.save();
+
+    await sendEmail(
+        admin.email,
+        'Verify Your SFS Super Admin Account',
+        `Your Student Facility System super admin verification code is: ${otp}\n\nThis code will expire in 5 minutes.`
+    );
+};
 
 exports.registerAdmin = async (req, res) => {
     try {
@@ -31,13 +48,11 @@ exports.registerAdmin = async (req, res) => {
             role = 'super_admin';
         } else {
             // Subsequent admins → must be created by a super_admin (check token)
-            const authHeader = req.headers.authorization;
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            const token = getSessionToken(req);
+            if (!token) {
                 return res.status(401).json({ message: "Only super_admin can create new admins. Provide a super_admin token." });
             }
 
-            const jwt = require('jsonwebtoken');
-            const token = authHeader.split(' ')[1];
             let decoded;
             try {
                 decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -60,11 +75,7 @@ exports.registerAdmin = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Mini admins must verify their email before the account is created —
-        // proves the email is real/reachable instead of trusting whatever the
-        // super admin typed in. The super_admin bootstrap path above (first
-        // admin ever) is unaffected — that one still goes live immediately,
-        // matching the documented Postman-based first-time setup.
+        // Mini admins must verify their email before the account is created.
         if (role === 'admin') {
             const otp = generateVerificationToken();
             const otpString = otp.toString();
@@ -110,16 +121,86 @@ exports.registerAdmin = async (req, res) => {
             email,
             password: hashedPassword,
             role,
+            email_verified: false,
         });
 
         await admin.save();
 
-        res.status(201).json({
-            message: 'Super Admin registered successfully',
-            role,
+        return res.status(201).json({
+            message: 'Super admin created. Log in and change the password to verify the email address.',
+            requiresVerification: false,
+            email_verified: admin.email_verified,
+            email,
         });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.verifySuperAdmin = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (typeof email !== 'string' || !email.trim() || otp === undefined || otp === null) {
+            return res.status(400).json({ message: "Email and verification code are required." });
+        }
+
+        const admin = await Admin.findOne({
+            email: email.trim(),
+            role: 'super_admin',
+            email_verified: false,
+            verification_token: otp.toString(),
+            verification_token_time: { $gt: new Date() },
+        });
+
+        if (!admin) {
+            return res.status(400).json({ message: "Invalid or expired verification code. Request a new code and try again." });
+        }
+
+        admin.email_verified = true;
+        admin.verification_token = undefined;
+        admin.verification_token_time = undefined;
+        await admin.save();
+
+        res.status(200).json({
+            message: "Super admin email verified successfully.",
+            admin: {
+                _id: admin._id,
+                first_name: admin.first_name,
+                last_name: admin.last_name,
+                email: admin.email,
+                role: admin.role,
+                email_verified: admin.email_verified,
+            },
+        });
+    } catch (error) {
+        console.error('Super admin email verification failed:', error);
+        res.status(500).json({ message: "Verification failed. Please try again." });
+    }
+};
+
+exports.resendSuperAdminVerification = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (typeof email !== 'string' || !email.trim()) {
+            return res.status(400).json({ message: "Email is required." });
+        }
+
+        const admin = await Admin.findOne({
+            email: email.trim(),
+            role: 'super_admin',
+            email_verified: false,
+        });
+
+        if (admin) {
+            await sendSuperAdminVerification(admin);
+        }
+
+        res.status(200).json({
+            message: "If an unverified super admin account exists for this email, a verification code has been sent.",
+        });
+    } catch (error) {
+        console.error('Could not resend super admin verification code:', error);
+        res.status(500).json({ message: "Could not send a verification code. Please try again." });
     }
 };
 
@@ -172,7 +253,7 @@ exports.loginAdmin = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const admin = await Admin.findOne({ email });
+        const admin = await Admin.findOne({ email }).select('+password');
         if (!admin) {
             return res.status(404).json({ message: "Admin not found" });
         }
@@ -182,25 +263,165 @@ exports.loginAdmin = async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
+        if (!admin.email_verified && admin.role !== 'super_admin') {
+            return res.status(403).json({
+                message: "Please verify your email before logging in. Request a verification code to continue.",
+                requiresVerification: true,
+            });
+        }
+
         // Sign token with actual role from DB (super_admin or admin)
         const token = jwt.sign(
             { id: admin._id, role: admin.role },
             process.env.JWT_SECRET,
             { expiresIn: '8h' }
         );
+        setSessionCookie(res, token);
+        setCsrfCookie(res);
 
         res.json({
-            token,
             admin: {
                 _id: admin._id,
                 first_name: admin.first_name,
                 last_name: admin.last_name,
                 email: admin.email,
                 role: admin.role,
+                email_verified: admin.email_verified,
             }
         });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.requestAdminPasswordReset = async (req, res) => {
+    const genericMessage = 'If an admin account exists for that email, a password reset code has been sent.';
+
+    try {
+        const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required.' });
+        }
+
+        const admin = await Admin.findOne({ email });
+        if (!admin) {
+            return res.status(200).json({ message: genericMessage });
+        }
+
+        const otp = generateVerificationToken().toString();
+        admin.reset_password_token = otp;
+        admin.reset_password_token_time = maxTokenTime();
+        await admin.save();
+
+        try {
+            await sendEmail(
+                admin.email,
+                'Admin Password Reset - Student Facility System',
+                `Your admin password reset code is: ${otp}\n\nThis code will expire in 5 minutes. If you did not request this, ignore this email.`
+            );
+        } catch (emailError) {
+            admin.reset_password_token = undefined;
+            admin.reset_password_token_time = undefined;
+            await admin.save();
+            console.error('Could not send admin password reset email:', emailError);
+        }
+
+        return res.status(200).json({ message: genericMessage });
+    } catch (error) {
+        console.error('Admin password reset request failed:', error);
+        return res.status(500).json({ message: 'Could not process the password reset request. Please try again.' });
+    }
+};
+
+exports.verifyAdminPasswordResetOtp = async (req, res) => {
+    try {
+        const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+        const { otp } = req.body;
+        if (!email || otp === undefined || otp === null || !String(otp).trim()) {
+            return res.status(400).json({ message: 'Email and verification code are required.' });
+        }
+
+        const admin = await Admin.findOne({
+            email,
+            reset_password_token: String(otp).trim(),
+            reset_password_token_time: { $gt: new Date() },
+        });
+
+        if (!admin) {
+            return res.status(400).json({ message: 'Invalid or expired verification code.' });
+        }
+
+        const resetTokenId = crypto.randomUUID();
+        admin.reset_password_token = resetTokenId;
+        admin.reset_password_token_time = new Date(Date.now() + 10 * 60 * 1000);
+        await admin.save();
+
+        const resetToken = jwt.sign(
+            { id: admin._id, role: admin.role, purpose: 'admin_password_reset', jti: resetTokenId },
+            process.env.JWT_SECRET,
+            { expiresIn: '10m' }
+        );
+
+        setSessionCookie(res, resetToken);
+        setCsrfCookie(res);
+        res.status(200).json({ message: 'Code verified. You can now set a new password.' });
+    } catch (error) {
+        console.error('Admin password reset code verification failed:', error);
+        res.status(500).json({ message: 'Could not verify the code. Please try again.' });
+    }
+};
+
+exports.resetAdminPassword = async (req, res) => {
+    try {
+        const { password, confirmPassword } = req.body;
+        const resetToken = getSessionToken(req);
+        if (!resetToken) {
+            return res.status(401).json({ message: 'Password reset authorization is required.' });
+        }
+        if (!password || !confirmPassword) {
+            return res.status(400).json({ message: 'New password and confirmation are required.' });
+        }
+        if (password !== confirmPassword) {
+            return res.status(400).json({ message: 'Passwords do not match.' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+        } catch (error) {
+            return res.status(401).json({ message: 'Password reset session is invalid or expired. Request a new code.' });
+        }
+
+        if (decoded.purpose !== 'admin_password_reset' || !['admin', 'super_admin'].includes(decoded.role)) {
+            return res.status(403).json({ message: 'Invalid password reset authorization.' });
+        }
+
+        const admin = await Admin.findById(decoded.id);
+        if (!admin || admin.role !== decoded.role) {
+            return res.status(404).json({ message: 'Admin account not found.' });
+        }
+        if (
+            !decoded.jti
+            || admin.reset_password_token !== decoded.jti
+            || !admin.reset_password_token_time
+            || admin.reset_password_token_time <= new Date()
+        ) {
+            return res.status(401).json({ message: 'Password reset session is invalid or expired. Request a new code.' });
+        }
+
+        admin.password = await bcrypt.hash(password, 10);
+        admin.reset_password_token = undefined;
+        admin.reset_password_token_time = undefined;
+        await admin.save();
+
+        clearSessionCookie(res);
+        res.status(200).json({ message: 'Password reset successfully. You can now log in.' });
+    } catch (error) {
+        console.error('Admin password reset failed:', error);
+        res.status(500).json({ message: 'Could not reset the password. Please try again.' });
     }
 };
 
@@ -378,8 +599,14 @@ exports.deleteHostelOwner = async (req, res) => {
     try {
         const Hostelowner = require('../../models/hostelowner/Hostelowner');
         const Hostelroom = require('../../models/hostelowner/Hostelroom');
+        const RoomBed = require('../../models/hostelowner/RoomBed');
+        const Booking = require('../../models/student/Booking');
         const { id } = req.params;
 
+        const activeBooking = await Booking.findOne({ hostel_id: id, status: { $in: ['Pending', 'Approved', 'Booked', 'Expiring'] } });
+        if (activeBooking) return res.status(409).json({ message: 'Cannot delete an owner with active bookings. Ban the account or resolve bookings first.' });
+        const roomIds = (await Hostelroom.find({ hostelId: id }).select('_id').lean()).map(room => room._id);
+        await RoomBed.deleteMany({ roomId: { $in: roomIds } });
         // Delete all hostels owned by this owner
         await Hostelroom.deleteMany({ hostelId: id }); // hostelId is the correct field in Hostelroom model
 
@@ -421,8 +648,11 @@ exports.deleteKitchenOwner = async (req, res) => {
     try {
         const Kitchenowner = require('../../models/kitchenowner/Kitchenowner');
         const Dish = require('../../models/kitchenowner/Dish');
+        const Order = require('../../models/student/Order');
         const { id } = req.params;
 
+        const activeOrder = await Order.findOne({ kitchenOwnerId: id, status: { $nin: ['Completed', 'Cancelled'] } });
+        if (activeOrder) return res.status(409).json({ message: 'Cannot delete a kitchen owner with active orders. Ban the account or resolve orders first.' });
         // Delete all dishes by this owner
         await Dish.deleteMany({ kitchen_owner_id: id });
 
@@ -727,7 +957,7 @@ exports.changeOwnPassword = async (req, res) => {
             return res.status(400).json({ message: 'New password must be at least 6 characters.' });
         }
 
-        const admin = await Admin.findById(req.admin._id || req.admin.id);
+        const admin = await Admin.findById(req.admin._id || req.admin.id).select('+password');
         if (!admin) {
             return res.status(404).json({ message: 'Admin not found.' });
         }
@@ -738,8 +968,29 @@ exports.changeOwnPassword = async (req, res) => {
         }
 
         admin.password = await bcrypt.hash(newPassword, 10);
-        await admin.save();
 
+        if (admin.role === 'super_admin' && !admin.email_verified) {
+            try {
+                await sendSuperAdminVerification(admin);
+            } catch (error) {
+                console.error('Could not send super admin verification code after password change:', error);
+                return res.status(500).json({
+                    message: 'Password changed, but the verification email could not be sent. Request a new code and try again.',
+                    passwordChanged: true,
+                    requiresVerification: true,
+                    email: admin.email,
+                });
+            }
+
+            return res.status(200).json({
+                message: `Password changed. A verification code was sent to ${admin.email}. Enter the code to verify your email.`,
+                passwordChanged: true,
+                requiresVerification: true,
+                email: admin.email,
+            });
+        }
+
+        await admin.save();
         res.json({ message: 'Password changed successfully. Please log in again.' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

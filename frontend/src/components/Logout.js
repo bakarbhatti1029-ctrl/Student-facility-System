@@ -1,8 +1,9 @@
 // src/components/Logout.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import { useDispatch } from 'react-redux';
+import axios from 'axios';
+import API_BASE_URL from '../utils/api';
 import { logout } from '../store/authSlice'; // Import the logout action
 
 const Logout = () => {
@@ -14,10 +15,9 @@ const Logout = () => {
     setShowConfirmation(true);
   };
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = async () => {
+    await axios.post(`${API_BASE_URL}/auth/logout`);
     sessionStorage.removeItem('verified');
-    sessionStorage.removeItem('user');
-    Cookies.remove('token');
     dispatch(logout()); // Dispatch the logout action
     navigate('/'); // Navigate to the home page after logout
   };

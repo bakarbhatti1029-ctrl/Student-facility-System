@@ -164,17 +164,24 @@ exports.updateRoom = async (req, res, next) => {
         
         // Update beds
         if (beds && Array.isArray(beds)) {
+            if (Number.isInteger(Number(capacity)) && beds.length > Number(capacity)) {
+                return res.status(400).json({ message: 'Room capacity cannot be lower than the number of beds.' });
+            }
             // Get existing bed IDs to track which ones to remove
             const existingBedIds = room.beds.map(bedId => bedId.toString());
             const updatedBedIds = [];
             
             for (const bedData of beds) {
                 if (bedData._id) {
+                    const existingBed = await Bed.findOne({ _id: bedData._id, roomId: room._id });
+                    if (!existingBed) return res.status(400).json({ message: 'Invalid bed for this room.' });
+                    if (existingBed.isBooked && (Number(bedData.bed_number) !== existingBed.bed_number || bedData.isBooked === false)) {
+                        return res.status(409).json({ message: 'A booked bed cannot be renumbered or made available.' });
+                    }
                     // Update existing bed
-                    await Bed.findByIdAndUpdate(bedData._id, {
-                        bed_number: bedData.bed_number,
-                        isBooked: bedData.isBooked
-                    });
+                    existingBed.bed_number = bedData.bed_number;
+                    if (!existingBed.isBooked) existingBed.isBooked = Boolean(bedData.isBooked);
+                    await existingBed.save();
                     updatedBedIds.push(bedData._id.toString());
                 } else {
                     // Create new bed
@@ -191,6 +198,10 @@ exports.updateRoom = async (req, res, next) => {
             
             // Remove beds that are no longer in the updated list
             const bedsToRemove = existingBedIds.filter(id => !updatedBedIds.includes(id));
+            const bookedBed = bedsToRemove.length && await Bed.findOne({ _id: { $in: bedsToRemove }, isBooked: true });
+            if (bookedBed) {
+                return res.status(409).json({ message: 'A booked bed cannot be removed from a room.' });
+            }
             for (const bedId of bedsToRemove) {
                 await Bed.findByIdAndDelete(bedId);
                 room.beds = room.beds.filter(id => id.toString() !== bedId);
@@ -223,6 +234,10 @@ exports.deleteRoom = async (req, res, next) => {
         
         if (!room) {
             return res.status(404).json({ message: 'Room not found' });
+        }
+        const activeBooking = await Booking.findOne({ room_id: room._id, status: { $in: ['Pending', 'Approved', 'Booked', 'Expiring'] } });
+        if (activeBooking) {
+            return res.status(409).json({ message: 'This room has an active booking and cannot be deleted.' });
         }
         
         // Delete all beds associated with this room

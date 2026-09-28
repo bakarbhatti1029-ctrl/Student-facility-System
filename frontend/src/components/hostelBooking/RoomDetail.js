@@ -6,7 +6,6 @@ import CheckoutModal from "./Checkout";
 import InvoiceModal from "./InvoiceModal";
 import Footer from "../Footer";
 import { FaBed, FaArrowLeft } from "react-icons/fa";
-import Cookies from "js-cookie";
 import API_BASE_URL from "../../utils/api";
 
 const RoomDetail = () => {
@@ -38,10 +37,10 @@ const RoomDetail = () => {
       try {
         setLoading(true);
         setError(null);
-        const token = Cookies.get('token');
+
         const response = await axios.get(
           `${API_BASE_URL}/api/rooms/getRoom/${roomId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { } }
         );
         if (response.data && response.data.room) {
           setRoomData(response.data.room);
@@ -118,10 +117,10 @@ const RoomDetail = () => {
     // Refetch room data from backend to ensure UI shows current bed status
     // (in case another user booked a bed or the DB state changed)
     try {
-      const token = Cookies.get('token');
+
       const response = await axios.get(
         `${API_BASE_URL}/api/rooms/getRoom/${roomId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { } }
       );
       if (response.data && response.data.room) {
         setRoomData(response.data.room);
@@ -135,8 +134,7 @@ const RoomDetail = () => {
         ...prev,
         beds: Array.isArray(prev.beds)
           ? prev.beds.map(b => b.bed_number === updatedBed.bed_number ? updatedBed : b)
-          : [updatedBed],
-      }));
+          : [updatedBed] }));
     }
 
     setIsCheckoutOpen(false);

@@ -48,7 +48,13 @@ const updateProfile = async (req, res, next) => {
     await profile.save();
 
     // Send the updated profile as the response
-    res.json(profile);
+    const safeProfile = profile.toObject();
+    delete safeProfile.password;
+    delete safeProfile.reset_password_token;
+    delete safeProfile.reset_password_token_time;
+    delete safeProfile.verification_token;
+    delete safeProfile.verification_token_time;
+    res.json(safeProfile);
   } catch (error) {
     // If there is any error during the process, pass it to the next middleware
     next(error);

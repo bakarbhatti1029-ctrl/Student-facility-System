@@ -23,24 +23,21 @@ export const PAYMENT_METHODS = [
     icon: FaCreditCard,
     status: 'active',
     description: 'Credit / Debit Card',
-    color: 'green',
-  },
+    color: 'green' },
   {
     id: 'jazzcash',
     name: 'JazzCash',
     icon: FaMobileAlt,
     status: 'pending',
     description: 'Mobile Wallet - Locked',
-    color: 'gray',
-  },
+    color: 'gray' },
   {
     id: 'easypaisa',
     name: 'EasyPaisa',
     icon: FaMobileAlt,
     status: 'pending',
     description: 'Mobile Wallet - Locked',
-    color: 'gray',
-  },
+    color: 'gray' },
 ];
 
 const PaymentOptions = ({ selectedMethod, onMethodChange, showModal = false }) => {

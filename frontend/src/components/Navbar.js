@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { getCartAPI } from '../store/cartSlice';
-import { setCredentials } from '../store/authSlice';
+import { logout, setCredentials } from '../store/authSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; 
 import { faUser } from '@fortawesome/free-solid-svg-icons'; 
 import axios from "axios";
-import Cookies from 'js-cookie';
+import { toast } from 'react-toastify';
 import API_BASE_URL from '../utils/api';
-import { readStoredAuth } from '../utils/auth';
 import PushNotificationButton from './common/PushNotificationButton';
 
 const Navbar = ({ module }) => {
@@ -22,34 +21,18 @@ const Navbar = ({ module }) => {
   const authUser = useSelector((state) => state.auth.user);
 
   useEffect(() => {
-    const { token, user } = readStoredAuth();
-
-    if (token && user) {
-      dispatch(setCredentials({ token, user }));
+    let active = true;
+    axios.get(`${API_BASE_URL}/auth/me`).then(({ data }) => {
+      if (!active) return;
+      sessionStorage.setItem('user', JSON.stringify(data.user));
+      dispatch(setCredentials({ user: data.user }));
       setIsLoggedIn(true);
-      return;
-    }
-
-    if (token) {
-      const fetchUserInfo = async () => {
-        try {
-          const response = await axios.get(`${API_BASE_URL}/profile/User`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const userInfo = response.data;
-          sessionStorage.setItem('user', JSON.stringify(userInfo));
-          dispatch(setCredentials({ token, user: userInfo }));
-          setIsLoggedIn(true);
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          Cookies.remove('token');
-          sessionStorage.removeItem('user');
-          setIsLoggedIn(false);
-        }
-      };
-
-      fetchUserInfo();
-    }
+    }).catch(() => {
+      if (!active) return;
+      sessionStorage.removeItem('user');
+      setIsLoggedIn(false);
+    });
+    return () => { active = false; };
   }, [dispatch]);
   
 
@@ -65,12 +48,16 @@ const Navbar = ({ module }) => {
     setShowLogoutModal(true); 
   };
 
-  const handleLogoutConfirm = () => {
-    Cookies.remove('token');
-    sessionStorage.removeItem('user');
-    setIsLoggedIn(false);
-    setShowLogoutModal(false);
-    navigate('/'); 
+  const handleLogoutConfirm = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/auth/logout`);
+      dispatch(logout());
+      setIsLoggedIn(false);
+      setShowLogoutModal(false);
+      navigate('/');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not log out. Please try again.');
+    }
   };
 
   const handleCancel = () => {
@@ -198,7 +185,7 @@ const Navbar = ({ module }) => {
             </>
           )}
           {isLoggedIn && module !== 'home' && (
-            <div className="mt-3 min-w-48 md:mt-0"><PushNotificationButton /></div>
+            <div className="mt-3 md:mt-0 md:ml-3"><PushNotificationButton /></div>
           )}
         </div>
       </div>

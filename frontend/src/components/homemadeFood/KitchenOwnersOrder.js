@@ -3,8 +3,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import KitchenOwnerNavbar from './KitchenOwnerNavbar';
 import { getOrdersForKitchen, updateOrderStatus, removeOrder, addNewOrder,addOrderToChart } from '../../store/orderSlice';
 import io from 'socket.io-client';
-import { jwtDecode } from 'jwt-decode';
-import Cookies from 'js-cookie';
 import ChatModule from './ChatModule';
 import API_BASE_URL from '../../utils/api';
 import ErrorState from '../common/ErrorState';
@@ -14,22 +12,19 @@ const KitchenOwnerOrders = () => {
   const dispatch = useDispatch();
   const { orders, loading, error } = useSelector(state => state.orders);
   const [socket, setSocket] = useState(null);
+  const user = useSelector(state => state.auth.user);
   
   const steps = ["Confirm Order", "Preparing Order", "Delivered", "Completed"]; // Defined steps
 
   useEffect(() => {
     dispatch(getOrdersForKitchen());
 
-    const token = Cookies.get('token');
-    if (token) {
-      const decodedToken = jwtDecode(token);
-      const kitchenId = decodedToken.id;
+    if (user?._id && user.role === 'kitchenOwner') {
+      const kitchenId = user._id;
 
       const newSocket = io(API_BASE_URL, {
         transports: ['websocket'],
-        withCredentials: true,
-        auth: { token },
-      });
+        withCredentials: true });
 
       newSocket.on('connect_error', (err) => {
         console.error('Socket connection error:', err.message);
@@ -50,7 +45,7 @@ const KitchenOwnerOrders = () => {
         newSocket.disconnect();
       };
     }
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return (

@@ -10,8 +10,7 @@ export const useAddOrUpdateRoom = (action, payload, handleClose) => {
     description: '',
     imageUrls: [''],
     beds: [{ bed_number: 1, isBooked: false }],
-    availability: true,
-  } : { ...payload });
+    availability: true } : { ...payload });
 
   const [errors, setErrors] = useState({});
   
@@ -45,8 +44,7 @@ export const useAddOrUpdateRoom = (action, payload, handleClose) => {
     const { name, value, type, checked } = e.target;
     setRoomDetails({
       ...roomDetails,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+      [name]: type === 'checkbox' ? checked : value });
   };
 
   const handleImageUrlChange = (index, value) => {
@@ -54,23 +52,20 @@ export const useAddOrUpdateRoom = (action, payload, handleClose) => {
     newImageUrls[index] = value;
     setRoomDetails({
       ...roomDetails,
-      imageUrls: newImageUrls,
-    });
+      imageUrls: newImageUrls });
   };
 
   const handleAddImageUrl = () => {
     setRoomDetails({
       ...roomDetails,
-      imageUrls: [...roomDetails.imageUrls, ''],
-    });
+      imageUrls: [...roomDetails.imageUrls, ''] });
   };
 
   const handleRemoveImageUrl = (index) => {
     const newImageUrls = roomDetails.imageUrls.filter((_, i) => i !== index);
     setRoomDetails({
       ...roomDetails,
-      imageUrls: newImageUrls,
-    });
+      imageUrls: newImageUrls });
   };
 
   const handleBedChange = (index, value) => {
@@ -79,8 +74,7 @@ export const useAddOrUpdateRoom = (action, payload, handleClose) => {
     newBeds[index].bed_number = value;
     setRoomDetails({
       ...roomDetails,
-      beds: newBeds,
-    });
+      beds: newBeds });
   };
 
   const handleAddBed = () => {
@@ -89,8 +83,7 @@ export const useAddOrUpdateRoom = (action, payload, handleClose) => {
       beds: [
         ...roomDetails.beds,
         { bed_number: roomDetails.beds.length + 1, isBooked: false },
-      ],
-    });
+      ] });
   };
 
   const handleRemoveBed = (index) => {
@@ -98,8 +91,7 @@ export const useAddOrUpdateRoom = (action, payload, handleClose) => {
     const newBeds = roomDetails.beds.filter((_, i) => i !== index);
     setRoomDetails({
       ...roomDetails,
-      beds: newBeds,
-    });
+      beds: newBeds });
   };
 
   const state = { roomDetails, errors };
@@ -111,11 +103,9 @@ export const useAddOrUpdateRoom = (action, payload, handleClose) => {
     handleImageUrlChange,
     handleRemoveBed,
     handleRemoveImageUrl,
-    handleSubmit,
-  };
+    handleSubmit };
 
   return {
     state,
-    handlers,
-  };
+    handlers };
 };

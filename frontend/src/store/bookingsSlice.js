@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import API_BASE_URL from '../utils/api';
 
 // Thunk to book a bed
@@ -9,12 +8,11 @@ export const bookRoom = createAsyncThunk('bookings/bookRoom', async ({ hostelId,
   console.log("roomId",roomId);
   console.log("bed",bed);
   console.log("paymentData",paymentData);
-  const token = Cookies.get('token');
+
   try {
     const response = await axios.post(`${API_BASE_URL}/api/bookings/book/${hostelId}/${roomId}/${bed}`, { bed, paymentData }, {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        }
     });
     return { roomId, bed: response.data };
   } catch (error) {
@@ -28,40 +26,37 @@ export const bookRoom = createAsyncThunk('bookings/bookRoom', async ({ hostelId,
 
 // Thunk to fetch all bookings
 export const fetchBookings = createAsyncThunk('bookings/fetchBookings', async (_, { rejectWithValue }) => {
-  const token = Cookies.get('token');
+
   try {
     const response = await axios.get(`${API_BASE_URL}/api/bookings/HostelOwnerBookedBeds`, {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        }
     });
     console.log('fetchBookings for hostelowner:', response.data);
     return response.data; // Raw bookings data from the backend
   } catch (error) {
     return rejectWithValue({
       message: error.response?.data?.message || error.message,
-      status: error.response?.status,
-    });
+      status: error.response?.status });
   }
 });
 
 export const decideBooking = createAsyncThunk(
   'bookings/decideBooking',
   async ({ bookingId, decision }, { rejectWithValue }) => {
-    const token = Cookies.get('token');
+
     try {
       const response = await axios.patch(
         `${API_BASE_URL}/api/bookings/${bookingId}/${decision}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { } }
       );
       return {
         bookingId,
         status: response.data.data.status,
         message: response.data.message,
         notificationSent: response.data.notificationSent,
-        notificationMessage: response.data.notificationMessage,
-      };
+        notificationMessage: response.data.notificationMessage };
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Failed to update booking status' });
     }
@@ -71,12 +66,12 @@ export const decideBooking = createAsyncThunk(
 export const completeBooking = createAsyncThunk(
   'bookings/completeBooking',
   async (bookingId, { rejectWithValue }) => {
-    const token = Cookies.get('token');
+
     try {
       const response = await axios.patch(
         `${API_BASE_URL}/api/bookings/${bookingId}/complete`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { } }
       );
       return { bookingId, status: response.data.data.status, message: response.data.message };
     } catch (error) {
@@ -88,12 +83,12 @@ export const completeBooking = createAsyncThunk(
 export const archiveBooking = createAsyncThunk(
   'bookings/archiveBooking',
   async (bookingId, { rejectWithValue }) => {
-    const token = Cookies.get('token');
+
     try {
       const response = await axios.patch(
         `${API_BASE_URL}/api/bookings/${bookingId}/archive`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { } }
       );
       return { bookingId, message: response.data.message };
     } catch (error) {
@@ -104,12 +99,11 @@ export const archiveBooking = createAsyncThunk(
 
 // Thunk to unbook a bed
 export const unbookRoom = createAsyncThunk('bookings/unbookRoom', async ({ roomId, bedId }, { rejectWithValue }) => {
-  const token = Cookies.get('token');
+
   try {
     const response = await axios.delete(`${API_BASE_URL}/api/bookings/unbookBed`, {
       headers: {
-        Authorization: `Bearer ${token}`
-      },
+        },
       data: { roomId, bedId }
     });
     return { roomId, bedId };
@@ -124,10 +118,10 @@ export const unbookRoom = createAsyncThunk('bookings/unbookRoom', async ({ roomI
 export const removeBookingFromHistory = createAsyncThunk(
   'bookings/removeBookingFromHistory',
   async (bookingId, { rejectWithValue }) => {
-    const token = Cookies.get('token');
+
     try {
       await axios.delete(`${API_BASE_URL}/api/bookings/unbookBed/${bookingId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { }
       });
       return { bookingId };
     } catch (error) {
@@ -142,9 +136,9 @@ export const fetchBookedRooms = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Fetching booked rooms');
-      const token = Cookies.get('token');
+
       const response = await axios.get(`${API_BASE_URL}/api/bookings/booked-rooms`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { }
       });
       console.log('fetch Bookings:', response.data);
       return response.data.data;

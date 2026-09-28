@@ -35,8 +35,8 @@ const hostels = [
       {
         university: 'GC University',
         distance: '1.5km',
-        university_lat: 31.5204,
-        university_lng: 74.3587
+        university_lat: 31.5731518,
+        university_lng: 74.3083536
       }
     ],
     email_verified: true
@@ -61,8 +61,8 @@ const hostels = [
       {
         university: 'GC University',
         distance: '2.5km',
-        university_lat: 31.5204,
-        university_lng: 74.3587
+        university_lat: 31.5731518,
+        university_lng: 74.3083536
       }
     ],
     email_verified: true
@@ -87,8 +87,8 @@ const hostels = [
       {
         university: 'GC University',
         distance: '3.5km',
-        university_lat: 31.5204,
-        university_lng: 74.3587
+        university_lat: 31.5731518,
+        university_lng: 74.3083536
       }
     ],
     email_verified: true

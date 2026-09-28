@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
-import Cookies from 'js-cookie';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import { getOrdersForCustomer, updateOrderInState, removeOrder } from '../../store/orderSlice'; // Import the new action
@@ -13,7 +11,7 @@ import ResponseCountdown from '../common/ResponseCountdown';
 const OrderPage = () => {
   const dispatch = useDispatch();
   const { orders, loading, error } = useSelector((state) => state.orders);
-  const [socket, setSocket] = useState(null);
+  const user = useSelector((state) => state.auth.user);
   const [orderPlaced, setOrderPlaced] = useState(false); // For tracking order placement
 
   useEffect(() => {
@@ -22,22 +20,16 @@ const OrderPage = () => {
       setOrderPlaced(true); // Set orderPlaced to true once order data is fetched
     });
 
-    const token = Cookies.get('token');
-    if (token) {
-      const decodedToken = JSON.parse(atob(token.split('.')[1]));
-      const userId = decodedToken.id;
+    if (user?._id) {
+      const userId = user._id;
 
       const newSocket = io(API_BASE_URL, {
         transports: ['websocket'],
-        withCredentials: true,
-        auth: { token },
-      });
+        withCredentials: true });
 
       newSocket.on('connect_error', (err) => {
         console.error('Socket connection error:', err.message);
       });
-
-      setSocket(newSocket);
 
       newSocket.emit('joinUserRoom', userId);
 
@@ -51,7 +43,7 @@ const OrderPage = () => {
         newSocket.disconnect();
       };
     }
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   const deleteOrder = (orderId) => {
     dispatch(removeOrder(orderId));

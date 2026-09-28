@@ -17,6 +17,4 @@ export const store = configureStore({
     kitchenItems: kitchenReducer,
     orders: ordersReducer,
     payments: paymentReducer,
-    student: studentReducer,
-  },
-});
+    student: studentReducer } });

@@ -14,7 +14,7 @@ const getProfile = async (req, res, next) => {
     const Model = util.getUserModel(userRole); // Example roles: 'student', 'admin', 'hostelOwner', 'kitchenOwner'
 
     // Fetch the profile data using the user's ID
-    const profile = await Model.findById(userId);
+    const profile = await Model.findById(userId).select('-password -reset_password_token -reset_password_token_time -verification_token -verification_token_time');
 
     // Check if the profile was found
     if (!profile) {

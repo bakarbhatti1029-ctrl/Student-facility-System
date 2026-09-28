@@ -41,3 +41,12 @@ Both are read at **build time** (a Create React App rule) — changing them mean
 
 - Real-time order status updates arrive via Socket.IO — make sure `REACT_APP_API_URL` matches whatever origin the backend's `ALLOWED_ORIGIN` allows, or the socket connection will silently fail.
 - Payments use Stripe's in-page `CardElement` (both hostel booking and food checkout) — there's no redirect to a separate Stripe-hosted page.
+
+
+## Recent client updates
+
+- Axios sends cross-origin API cookies. The backend supports an HTTP-only `sfs_session` cookie while existing bearer-token calls remain compatible during migration.
+- Role-aware `ProtectedRoute` guards prevent protected screens from mounting before redirect. The API remains the authorization source of truth.
+- The redesigned chatbot provides quick prompts, timestamps, concise guidance, a new-conversation action, and responsive layout.
+
+- Registration device uploads use the restricted registration endpoint; post-login profile/listing uploads use the authenticated endpoint.

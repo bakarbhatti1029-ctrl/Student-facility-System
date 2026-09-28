@@ -5,7 +5,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');
-const { uploadImage } = require('../controllers/uploadController/uploadController');
+const { uploadImage, uploadRegistrationImage } = require('../controllers/uploadController/uploadController');
+const verifyJWT = require('../middlewares/AuthToken');
 
 // Keep the file in memory only long enough to stream it to Cloudinary — never
 // written to disk, so there's nothing to clean up on this server.
@@ -24,6 +25,19 @@ const uploadLimiter = rateLimit({
   message: { message: 'Too many image uploads. Please wait a few minutes and try again.' },
 });
 
-router.post('/image', uploadLimiter, upload.single('image'), uploadImage);
+// Public only for the short registration step. It is intentionally stricter
+// than the authenticated route to limit Cloudinary abuse before an account
+// exists. MIME type, 5MB limit, folder allow-list and image transformation are
+// still enforced by multer/uploadRegistrationImage.
+const registrationUploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many registration image uploads. Please wait a few minutes and try again.' },
+});
+
+router.post('/image', verifyJWT, uploadLimiter, upload.single('image'), uploadImage);
+router.post('/registration-image', registrationUploadLimiter, upload.single('image'), uploadRegistrationImage);
 
 module.exports = router;

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, setCredentials } from '../store/authSlice';
+import { logout, restoreSession } from '../store/authSlice';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ImageUploadField from '../components/common/ImageUploadField';
-import { readStoredAuth } from '../utils/auth';
 import axios from 'axios';
 import {
   FaUser, FaEnvelope, FaPhone, FaVenusMars, FaMapMarkerAlt, FaIdCard,
@@ -18,7 +17,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const StudentProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, token } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
 
   const [profileData, setProfileData] = useState(null);
   const [foodOrders, setFoodOrders] = useState([]);
@@ -32,17 +31,8 @@ const StudentProfile = () => {
   const [activeTab, setActiveTab] = useState('profile');
 
   useEffect(() => {
-    if (!user && !token) {
-      // Owners reach this page straight from their own sidebar, which never
-      // renders the shared Navbar that normally rehydrates Redux auth state
-      // from cookies/sessionStorage. Rehydrate here too before assuming
-      // there's no active session and bouncing to the login form.
-      const stored = readStoredAuth();
-      if (stored.token && stored.user) {
-        dispatch(setCredentials({ token: stored.token, user: stored.user }));
-        return;
-      }
-      navigate('/loginform');
+    if (!user) {
+      dispatch(restoreSession()).unwrap().catch(() => navigate('/loginform'));
       return;
     }
     if (user) {
@@ -56,18 +46,16 @@ const StudentProfile = () => {
         profilePicture: user.profile_picture || '',
         student_id: user.student_id || '',
         cnic: user.cnic || '',
-        role,
-      });
+        role });
       setEditData({ name: `${user.first_name||''} ${user.last_name||''}`.trim(), phone: user.phone_number||'', address: user.address||'', profilePicture: user.profile_picture||'' });
 
       // Food orders / hostel bookings only apply to student accounts.
       if (role === 'student') {
-        const authToken = token || localStorage.getItem('token');
         const fetchAll = async () => {
           try {
             const [ordersRes, bookingsRes] = await Promise.allSettled([
-              axios.get(`${API_BASE_URL}/api/order/customer`, { headers: { Authorization: `Bearer ${authToken}` } }),
-              axios.get(`${API_BASE_URL}/api/bookings/booked-rooms`, { headers: { Authorization: `Bearer ${authToken}` } }),
+              axios.get(`${API_BASE_URL}/api/order/customer`, { headers: { } }),
+              axios.get(`${API_BASE_URL}/api/bookings/booked-rooms`, { headers: { } }),
             ]);
             setFoodOrders(ordersRes.status === 'fulfilled' ? (ordersRes.value.data?.orders || ordersRes.value.data || []) : []);
             setBedBookings(bookingsRes.status === 'fulfilled' ? (bookingsRes.value.data?.data || bookingsRes.value.data || []) : []);
@@ -79,7 +67,7 @@ const StudentProfile = () => {
         setLoading(false);
       }
     }
-  }, [user, token, navigate, dispatch]);
+  }, [user, navigate, dispatch]);
 
   const handleLogout = () => { dispatch(logout()); navigate('/loginform'); };
   const [savingProfile, setSavingProfile] = useState(false);
@@ -87,29 +75,25 @@ const StudentProfile = () => {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      const authToken = token || localStorage.getItem('token');
       const [firstName, ...rest] = (editData.name || '').trim().split(' ');
       const payload = {
         first_name: firstName || '',
         last_name: rest.join(' ') || '',
         phone_number: editData.phone || '',
-        profile_picture: editData.profilePicture || '',
-      };
+        profile_picture: editData.profilePicture || '' };
       // For kitchen owners, `address` on the account record is the kitchen's
       // own address, not the owner's personal one — never send it from here.
       if (profileData?.role !== 'kitchenOwner') {
         payload.address = editData.address || '';
       }
       const res = await axios.put(`${API_BASE_URL}/profile/User`, payload, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+        headers: { } });
       setProfileData(prev => ({
         ...prev,
         name: `${res.data.first_name || ''} ${res.data.last_name || ''}`.trim(),
         phone: res.data.phone_number,
         address: res.data.address,
-        profilePicture: res.data.profile_picture,
-      }));
+        profilePicture: res.data.profile_picture }));
       setEditMode(false);
     } catch (err) {
       console.error('Failed to save profile:', err);

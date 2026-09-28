@@ -9,8 +9,7 @@ export const useAddOrUpdateItem = (action, payload, handleClose) => {
     price: "",
     imageUrls: [""],
     category: "",
-    availability: true,
-  } : { ...payload });
+    availability: true } : { ...payload });
  
   const [errors, setErrors] = useState({});
 
@@ -54,15 +53,13 @@ export const useAddOrUpdateItem = (action, payload, handleClose) => {
     const { name, value, type, checked } = e.target;
     setItemDetails({
       ...itemDetails,
-      [name]: type === "checkbox" ? checked : value,
-    });
+      [name]: type === "checkbox" ? checked : value });
   };
 
   const handleImageUrlChange = (value) => {
     setItemDetails({
       ...itemDetails,
-      imageUrls: [value],
-    });
+      imageUrls: [value] });
   };
 
   const state = { itemDetails };

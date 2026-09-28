@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -45,6 +44,16 @@ const isAllowedEmail = (email) => {
   return ALLOWED_DOMAINS.includes(domain);
 };
 
+const PHONE_COUNTRIES = [
+  { code: '+92', label: 'Pakistan (+92)' },
+  { code: '+91', label: 'India (+91)' },
+  { code: '+234', label: 'Nigeria (+234)' },
+];
+
+const internationalPhoneSchema = Yup.string()
+  .matches(/^\+(?:92|91|234)[0-9]{10}$/, 'Select a country code and enter a 10-digit phone number')
+  .required('Phone number is required');
+
 const validationSchemas = {
   student: Yup.object({
     first_name: Yup.string().required("First name is required"),
@@ -59,9 +68,7 @@ const validationSchemas = {
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password"), null], "Passwords must match")
       .required("Confirm password is required"),
-    phone_number: Yup.string()
-      .matches(/^\+92[0-9]{10}$/, 'Phone number must start with +92 followed by 10 digits')
-      .required("Phone number is required"),
+    phone_number: internationalPhoneSchema,
     address: Yup.string().required("Address is required"),
     gender: Yup.string().required("Gender is required"),
     profile_picture: Yup.string()
@@ -69,8 +76,7 @@ const validationSchemas = {
       .required("Profile picture URL is required"),
     cnic: Yup.string()
       .matches(/^[0-9]{13}$/, "CNIC must be 13 digits")
-      .required("CNIC is required"),
-  }),
+      .required("CNIC is required") }),
   hostelOwner: Yup.object({
     first_name: Yup.string().required("First name is required"),
     last_name: Yup.string().required("Last name is required"),
@@ -84,9 +90,7 @@ const validationSchemas = {
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password"), null], "Passwords must match")
       .required("Confirm password is required"),
-    phone_number: Yup.string()
-      .matches(/^\+92[0-9]{10}$/, 'Phone number must start with +92 followed by 10 digits')
-      .required("Phone number is required"),
+    phone_number: internationalPhoneSchema,
     address: Yup.string().required("Address is required"),
     profile_picture: Yup.string()
       .url("Invalid URL")
@@ -105,14 +109,12 @@ const validationSchemas = {
       .of(
         Yup.object({
           university: Yup.string().required("University name is required"),
-          distance: Yup.string().required("Distance is required"),
-        })
+          distance: Yup.string().required("Distance is required") })
       )
       .min(1, "At least one nearby institute is required"),
     cnic: Yup.string()
       .matches(/^[0-9]{13}$/, "CNIC must be 13 digits")
-      .required("CNIC is required"),
-  }),
+      .required("CNIC is required") }),
   kitchenOwner: Yup.object({
     first_name: Yup.string().required("First name is required"),
     last_name: Yup.string().required("Last name is required"),
@@ -126,9 +128,7 @@ const validationSchemas = {
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password"), null], "Passwords must match")
       .required("Confirm password is required"),
-    phone_number: Yup.string()
-      .matches(/^\+92[0-9]{10}$/, 'Phone number must start with +92 followed by 10 digits')
-      .required("Phone number is required"),
+    phone_number: internationalPhoneSchema,
     address: Yup.string().required("Address is required"),
     profile_picture: Yup.string()
       .url("Invalid URL")
@@ -143,9 +143,7 @@ const validationSchemas = {
       .required("Kitchen picture URL is required"),
     cnic: Yup.string()
       .matches(/^[0-9]{13}$/, "CNIC must be 13 digits")
-      .required("CNIC is required"),
-  }),
-};
+      .required("CNIC is required") }) };
 
 const RegistrationForm = () => {
   const navigate = useNavigate();
@@ -155,6 +153,7 @@ const RegistrationForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+92');
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
   const toggleShowConfirmPassword = () =>
@@ -185,8 +184,7 @@ const RegistrationForm = () => {
       kitchen_description: "",
       kitchen_picture: "",
       // stripe_account_id: "", // Added Stripe Account ID field
-      cnic: "",
-    },
+      cnic: "" },
     validationSchema: validationSchemas[role],
     onSubmit: async (values) => {
       try {
@@ -234,8 +232,7 @@ const RegistrationForm = () => {
               .filter(inst => inst.university && inst.university.trim() !== "")
               .map(inst => ({
                 university: inst.university.trim(),
-                distance: inst.distance ? inst.distance.trim() : "Distance not provided",
-              }))
+                distance: inst.distance ? inst.distance.trim() : "Distance not provided" }))
           };
         } else if (normalizedRole === 'student') {
           payload = {
@@ -257,8 +254,7 @@ const RegistrationForm = () => {
         // Single registration call via Redux thunk
         const response = await dispatch(registerUser(payload)).unwrap();
 
-        if (response.token) {
-          Cookies.set('token', response.token);
+        if (response.requiresVerification) {
           // Clear any previously logged-in user data so stale profile isn't shown
           sessionStorage.removeItem('user');
           toast.success('Registration successful! Please check your email for OTP.');
@@ -270,8 +266,7 @@ const RegistrationForm = () => {
         toast.error(errorMessage);
         setError(errorMessage);
       }
-    },
-  });
+    } });
 
   const handleRoleChange = (e) => {
     setRole(e.target.value);
@@ -291,8 +286,7 @@ const RegistrationForm = () => {
       kitchen_address: "",
       kitchen_description: "",
       kitchen_picture: "",
-      // stripe_account_id: "",
-    });
+      // stripe_account_id: "" });
     formik.setTouched({});
     formik.setErrors({});
   };
@@ -359,14 +353,12 @@ const RegistrationForm = () => {
             .filter(inst => inst.university && inst.university.trim() !== "")
             .map(inst => ({
               university: inst.university.trim(),
-              distance: inst.distance ? inst.distance.trim() : "Distance not provided",
-            })),
+              distance: inst.distance ? inst.distance.trim() : "Distance not provided" })),
           // Only sent if the owner used the map picker — backend falls back
           // to geocoding hostel_address when these are absent.
           ...(values.hostel_lat != null && values.hostel_lng != null
             ? { hostel_lat: values.hostel_lat, hostel_lng: values.hostel_lng }
-            : {}),
-        };
+            : {}) };
       } else if (normalizedRole === 'student') {
         payload = {
           ...payload,
@@ -396,9 +388,7 @@ const RegistrationForm = () => {
         
         console.log("Direct API call succeeded:", response.data);
         
-        if (response.data.token) {
-          Cookies.set('token', response.data.token);
-          sessionStorage.setItem('user', JSON.stringify(response.data.user));
+        if (response.data.requiresVerification) {
           toast.success('Registration successful! Please check your email for OTP.');
           navigate('/otp');
         }
@@ -619,7 +609,21 @@ const RegistrationForm = () => {
                 Phone Number
               </label>
               <div className="mt-1 flex rounded-md shadow-sm">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-700 text-gray-200">+92</span>
+                <select
+                  aria-label="Phone country code"
+                  value={phoneCountryCode}
+                  onChange={(e) => {
+                    const nextCode = e.target.value;
+                    const localNumber = (formik.values.phone_number || '').slice(phoneCountryCode.length);
+                    setPhoneCountryCode(nextCode);
+                    formik.setFieldValue('phone_number', localNumber ? `${nextCode}${localNumber}` : '');
+                  }}
+                  className="px-2 rounded-l-md border border-r-0 border-gray-300 bg-gray-700 text-gray-200 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  {PHONE_COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.code}>{country.label}</option>
+                  ))}
+                </select>
                 <input
                   id="phone_number"
                   name="phone_number_local"
@@ -628,10 +632,10 @@ const RegistrationForm = () => {
                   maxLength={10}
                   onChange={(e) => {
                     const digits = (e.target.value || '').replace(/\D/g, '').slice(0, 10);
-                    formik.setFieldValue('phone_number', digits ? `+92${digits}` : '');
+                    formik.setFieldValue('phone_number', digits ? `${phoneCountryCode}${digits}` : '');
                   }}
                   onBlur={() => formik.setFieldTouched('phone_number', true)}
-                  value={(formik.values.phone_number || '').replace(/^\+92/, '')}
+                  value={(formik.values.phone_number || '').slice(phoneCountryCode.length)}
                   className="p-2 block w-full border border-gray-300 rounded-r-md focus:ring-indigo-500 focus:border-indigo-500 bg-[#25292e] text-white"
                 />
               </div>

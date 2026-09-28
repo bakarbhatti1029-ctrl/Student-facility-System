@@ -30,7 +30,7 @@ const Footer = () => {
             <p className="mt-2 font-medium text-white flex items-center gap-2">
               <FaUser />
               <a
-                href="https://aqibawan2003.netlify.app/"
+                href="https://aqibawan2003.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-gray-300 transition"
@@ -42,7 +42,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="text-center mt-8 border-t border-gray-700 pt-4">
-        <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} Student Facility System. Developed by <a href="mailto:aqibawan0102@gmail.com" className="text-gray-400 hover:text-white transition">Aqib Awan</a>. All rights reserved.</p>
+        <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} Student Facility System. Developed by <a href="https://aqibawan2003.vercel.app" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">Aqib Awan</a>. All rights reserved.</p>
       </div>
     </footer>
   );

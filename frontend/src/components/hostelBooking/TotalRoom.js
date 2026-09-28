@@ -4,8 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllRooms,
   fetchRoom,
-  deleteRoom,
-} from "../../store/hostelSlice";
+  deleteRoom } from "../../store/hostelSlice";
 import HostelNavbar from "./HostelOwnerNavbar";
 import { AddOrUpdateRoomModal } from "./AddOrUpdateRoomModal/AddOrUpdateRoomModal";
 import ErrorState from "../common/ErrorState";
@@ -16,8 +15,7 @@ const TotalRoom = () => {
   const [modalState, setModalState] = useState({
     isOpen: false,
     action: "",
-    payload: {},
-  });
+    payload: {} });
 
   useEffect(() => {
     dispatch(fetchAllRooms());
@@ -28,8 +26,7 @@ const TotalRoom = () => {
       setModalState({
         isOpen: true,
         action: "edit",
-        payload: result.payload,
-      });
+        payload: result.payload });
     });
   };
 
@@ -41,8 +38,7 @@ const TotalRoom = () => {
     setModalState({
       isOpen: true,
       action: "add",
-      payload: {},
-    });
+      payload: {} });
   };
 
   const handleCloseModal = () => {

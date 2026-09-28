@@ -13,8 +13,7 @@ const statusClass = {
   Booked: 'border-[#43534a] bg-[#222c27] text-[#adc0b5]',
   Completed: 'border-[#46515d] bg-[#252c34] text-[#b5c0cb]',
   Rejected: 'border-[#60494b] bg-[#302426] text-[#d1aaad]',
-  Cancelled: 'border-slate-600 bg-slate-800 text-slate-300',
-};
+  Cancelled: 'border-slate-600 bg-slate-800 text-slate-300' };
 
 const statusLabel = {
   Pending: 'Awaiting review',
@@ -22,8 +21,7 @@ const statusLabel = {
   Booked: 'Confirmed',
   Completed: 'Completed',
   Rejected: 'Rejected',
-  Cancelled: 'Cancelled',
-};
+  Cancelled: 'Cancelled' };
 
 const Detail = ({ label, value, mono }) => (
   <div className="min-w-0">
@@ -77,8 +75,7 @@ const HostelOwnerBookingBed = () => {
     total: bookings.length,
     pending: bookings.filter(b => b.status === 'Pending').length,
     approved: bookings.filter(b => ['Approved', 'Booked'].includes(b.status)).length,
-    paid: bookings.filter(b => b.paymentStatus === 'completed').length,
-  }), [bookings]);
+    paid: bookings.filter(b => b.paymentStatus === 'completed').length }), [bookings]);
 
   const filteredBookings = useMemo(() => {
     const term = search.trim().toLowerCase();

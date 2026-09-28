@@ -131,9 +131,9 @@ const getFilteredHostels = async (req, res) => {
         // Filter for hostels with empty or no facilities
         filter.facilities = { $in: [[], null, ''] };
       } else if (facilityList.length === 1) {
-        filter.facilities = { $regex: new RegExp(facilityList[0], 'i') };
+        filter.facilities = { $regex: new RegExp(escapeRegex(facilityList[0]), 'i') };
       } else if (facilityList.length > 1) {
-        filter.facilities = { $all: facilityList.map((f) => new RegExp(`^${f}$`, 'i')) };
+        filter.facilities = { $all: facilityList.map((f) => new RegExp(`^${escapeRegex(f)}$`, 'i')) };
       }
     }
 

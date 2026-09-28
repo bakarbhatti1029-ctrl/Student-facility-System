@@ -569,3 +569,12 @@ The chatbot now understands these types of questions:
 ---
 
 Built with ❤️ by Aqib Awan — Final Year Project, Govt. Shalimar Graduate College, Lahore
+
+
+## Recent deployment notes
+
+- Set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` together in the deployed backend environment to enable the browser notification bell.
+- `/api/upload/image` is authenticated. `/api/upload/registration-image` is the pre-login route for registration images and only accepts `profile`, `hostel`, and `kitchen` types.
+- Both image routes only accept JPG, PNG, WEBP, or GIF files up to 5 MB. The registration route is limited to 8 requests per 15 minutes per IP.
+
+- After changing backend environment variables, redeploy the backend. After changing `REACT_APP_*` variables, rebuild/redeploy the frontend.

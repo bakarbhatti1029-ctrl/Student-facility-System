@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Cookies from 'js-cookie';
 import io from 'socket.io-client';
-import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 import API_BASE_URL from '../../utils/api';
 import { playNotificationSound } from '../../utils/playNotificationSound';
@@ -21,6 +20,7 @@ const MOBILE_BREAKPOINT = 768;
 const KitchenOwnerNavbar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // Desktop vs mobile is decided in JS, not via Tailwind's `md:` classes -
@@ -32,15 +32,11 @@ const KitchenOwnerNavbar = () => {
   );
 
   useEffect(() => {
-    const token = Cookies.get('token');
-    const user = sessionStorage.getItem('user');
 
-    // Check if the user is logged in based on token and session
-    if (token && user) {
+    axios.get(`${API_BASE_URL}/auth/me`).then(({ data }) => {
       setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
+      setUser(data.user);
+    }).catch(() => setIsLoggedIn(false));
   }, []);
 
   useEffect(() => {
@@ -54,15 +50,10 @@ const KitchenOwnerNavbar = () => {
   // keeping its order list in sync) — a toast + sound instead of them having
   // to keep the Orders tab open and watched to notice anything came in.
   useEffect(() => {
-    const token = Cookies.get('token');
-    if (!token) return;
 
-    const kitchenId = jwtDecode(token).id;
-    const socket = io(API_BASE_URL, {
-      transports: ['websocket'],
-      withCredentials: true,
-      auth: { token },
-    });
+    if (!user?._id || user.role !== 'kitchenOwner') return undefined;
+    const kitchenId = user._id;
+    const socket = io(API_BASE_URL, { transports: ['websocket'], withCredentials: true });
 
     socket.emit('joinKitchenRoom', kitchenId);
 
@@ -75,7 +66,7 @@ const KitchenOwnerNavbar = () => {
       socket.emit('leaveKitchenRoom', kitchenId);
       socket.disconnect();
     };
-  }, []);
+  }, [user]);
 
   // Lock background scroll while the mobile drawer is open, otherwise the
   // page underneath the translucent backdrop can still be scrolled/swiped.
@@ -91,7 +82,7 @@ const KitchenOwnerNavbar = () => {
   };
 
   const handleLogoutConfirm = () => {
-    Cookies.remove('token');
+    axios.post(`${API_BASE_URL}/auth/logout`).catch(() => {});
     sessionStorage.removeItem('user');
     setIsLoggedIn(false);
     setShowLogoutModal(false);
@@ -104,7 +95,6 @@ const KitchenOwnerNavbar = () => {
 
   const renderLinks = (onLinkClick) => (
     <>
-      <li className="px-3 py-2"><PushNotificationButton /></li>
       {OWNER_LINKS.map((link) => (
         <li key={link.label} className="text-white text-2xl font-semibold hover:bg-gray-900 px-3 py-2 rounded">
           <Link to={link.to} onClick={onLinkClick}>{link.label}</Link>
@@ -144,13 +134,14 @@ const KitchenOwnerNavbar = () => {
                   Visit Website
                 </Link>
                 {isLoggedIn && (
-                  <div className="mt-4">
+                  <div className="mt-4 flex items-center gap-3">
                     <button
                       onClick={handleLogoutClick}
                       className="bg-[#ECDFCC] hover:bg-[#D6C4B0] px-4 py-2 rounded-lg"
                     >
                       Logout
                     </button>
+                    <PushNotificationButton />
                   </div>
                 )}
               </div>
@@ -161,22 +152,28 @@ const KitchenOwnerNavbar = () => {
         /* Desktop: traditional sidebar, sticky (not fixed) so it can't overlap
            content that comes after it in the page (e.g. anything below the fold). */
         <nav className="flex w-[180px] shrink-0 h-screen sticky top-0 self-start p-4 flex-col justify-between bg-gray-800 z-30">
-          <ul className="mt-20 space-y-4">
+          <div>
+            <Link to="/profile" className="mx-auto mt-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-gray-600 bg-gray-700 text-lg font-semibold text-white hover:border-gray-400" aria-label="Open personal profile">
+              {user?.profile_picture ? <img src={user.profile_picture} alt="Owner profile" className="h-full w-full object-cover" /> : <span>{user?.first_name?.charAt(0)?.toUpperCase() || 'O'}</span>}
+            </Link>
+            <ul className="mt-10 space-y-4">
             {renderLinks(undefined)}
-          </ul>
+            </ul>
+          </div>
 
           <div className="mb-4">
             <Link to="/" target="_blank" rel="noopener noreferrer" className="text-white text-2xl mb-6 font-semibold hover:bg-gray-900 px-3 py-2 rounded">
               Visit Website
             </Link>
             {isLoggedIn && (
-              <div className="ml-16 mt-6">
+              <div className="mt-6 flex items-center justify-center gap-3">
                 <button
                   onClick={handleLogoutClick}
                   className="bg-[#ECDFCC] hover:bg-[#D6C4B0]  px-4 py-2 rounded-lg"
                 >
                   Logout
                 </button>
+                <PushNotificationButton />
               </div>
             )}
           </div>

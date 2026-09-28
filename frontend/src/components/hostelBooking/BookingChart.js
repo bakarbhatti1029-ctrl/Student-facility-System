@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import {
   LineChart,
   Line,
@@ -10,8 +9,7 @@ import {
   Tooltip,
   Legend,
   Brush,
-  ResponsiveContainer,
-} from 'recharts';
+  ResponsiveContainer } from 'recharts';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -23,10 +21,9 @@ const BookingChart = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = Cookies.get('token');
+
         const res = await axios.get(`${API_BASE_URL}/api/bookings/monthly-stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+          headers: { } });
         setData(res.data.data || []);
       } catch (err) {
         setError(err?.response?.data?.message || 'Failed to load booking stats.');
@@ -49,8 +46,7 @@ const BookingChart = () => {
             top: 10,
             right: 30,
             left: 0,
-            bottom: 0,
-          }}
+            bottom: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           {/* Display month names on the X-axis */}

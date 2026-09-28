@@ -21,8 +21,7 @@ const AboutUs = () => {
         style={{
           backgroundImage:
             "url('https://images.unsplash.com/photo-1556911220-bff31c812dba?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGlsbHVzdHJhdGlvbiUyMGJhY2tncm91bmQlMjAlMjBwaWMlMjBmb3IlMjBhYm91dCUyMHVzJTIwcGFnZSUyMHdpdGglMjBhJTIwaG9zdGVsJTIwYW5kJTIwa2l0Y2hlbiUyMHBpY3R1cmV8ZW58MHx8MHx8fDA%3D')",
-          height: "500px",
-        }}
+          height: "500px" }}
       >
         <div className="absolute inset-0 bg-black opacity-50"></div>
         <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 text-center">

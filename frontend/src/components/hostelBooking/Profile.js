@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import ImageUploadField from '../common/ImageUploadField';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaMapMarkerAlt, FaUniversity } from 'react-icons/fa';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -12,7 +11,6 @@ const Profile = () => {
   const [editPicture, setEditPicture] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [showProfilePicture, setShowProfilePicture] = useState(false);
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
@@ -36,11 +34,11 @@ const Profile = () => {
     setSaving(true);
     setError('');
     try {
-      const token = Cookies.get('token');
+
       const res = await axios.put(
         `${API_BASE_URL}/profile/User`,
         { hostel_picture: editPicture },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { } }
       );
       const updatedUser = { ...user, hostel_picture: res.data.hostel_picture };
       setUser(updatedUser);
@@ -53,67 +51,99 @@ const Profile = () => {
     }
   };
 
+  const nearbyInstitutes = Array.isArray(user.nearby_institutes)
+    ? user.nearby_institutes.filter((institute) => institute?.university).slice(0, 2)
+    : [];
+
   return (
-    <div className='md:flex'>
-      <div className='w-full md:w-[500px] pt-6 pl-6'>
-        <button
-          type='button'
-          onClick={() => user.profile_picture && setShowProfilePicture(true)}
-          className='mb-4 flex h-24 w-24 overflow-hidden rounded-full border-4 border-[#697565] bg-gray-700'
-          aria-label='View profile picture'
-        >
-          {user.profile_picture ? <img className='h-full w-full object-cover' src={user.profile_picture} alt='Owner profile' /> : <span className='m-auto text-gray-300'>No photo</span>}
-        </button>
-        <img className='w-full h-auto md:h-[500px] object-cover' src={user.hostel_picture} alt={user.hostel_name} />
-        {!editMode && (
-          <button
-            onClick={startEdit}
-            className='mt-2 bg-[#697565] hover:bg-[#3C3D37] text-white px-4 py-2 rounded flex items-center gap-2'
-          >
-            <FaEdit /> Change Picture
-          </button>
-        )}
-        {editMode && (
-          <form onSubmit={handleSave} className='mt-4 bg-[#25292e] rounded-xl p-4'>
-            <ImageUploadField
-              label="Hostel Picture"
-              name="hostelPicture"
-              value={editPicture}
-              onChange={setEditPicture}
-              uploadType="hostel"
-            />
-            {error && <div className='text-red-500 text-sm mb-2'>{error}</div>}
-            <div className='flex gap-3'>
-              <button type='submit' disabled={saving} className='bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2 rounded'>
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-              <button type='button' onClick={() => setEditMode(false)} className='bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded'>
-                Cancel
-              </button>
+    <section className='w-full'>
+      <div className='relative min-h-[500px] overflow-hidden rounded-2xl border border-white/10 bg-[#25292e] shadow-2xl sm:min-h-[520px]'>
+        <img
+          className='absolute inset-0 h-full w-full object-cover'
+          src={user.hostel_picture}
+          alt={user.hostel_name || 'Hostel'}
+        />
+        <div className='absolute inset-0 bg-black/15' />
+        <div className='absolute inset-y-0 left-0 w-full bg-gradient-to-r from-black/90 via-black/75 to-transparent sm:w-[64%] lg:w-[56%]' />
+
+        <div className='absolute inset-y-0 left-0 flex w-full max-w-3xl flex-col justify-end p-6 text-white sm:w-[64%] sm:p-10 lg:w-[56%] lg:p-12'>
+          <div className='border-l-2 border-[#ECDFCC] pl-5 sm:pl-6'>
+            <div className='mb-5 flex items-center gap-3'>
+              <span className='inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ECDFCC]/50 bg-[#ECDFCC]/15 text-[#ECDFCC]'>
+                <FaUniversity aria-hidden='true' />
+              </span>
+              <p className='text-[11px] font-bold uppercase tracking-[0.28em] text-[#ECDFCC]'>
+                Hostel owner profile
+              </p>
             </div>
-          </form>
-        )}
-      </div>
-      {showProfilePicture && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4' onClick={() => setShowProfilePicture(false)}>
-          <div className='relative max-w-3xl max-h-[90vh]' onClick={(e) => e.stopPropagation()}>
-            <button type='button' onClick={() => setShowProfilePicture(false)} className='absolute -top-10 right-0 text-2xl text-white' aria-label='Close profile picture'>&times;</button>
-            <img src={user.profile_picture} alt='Owner profile' className='max-h-[85vh] max-w-full rounded-lg object-contain' />
+
+            <h2 className='max-w-xl text-4xl font-bold leading-[0.95] tracking-tight drop-shadow-lg sm:text-5xl lg:text-6xl'>
+              {user.hostel_name}
+            </h2>
+
+            <div className='my-5 h-px w-20 bg-[#ECDFCC]/80' />
+
+            {user.hostel_address && (
+              <p className='flex items-start gap-3 text-sm font-semibold leading-6 text-white/95 sm:text-base'>
+                <FaMapMarkerAlt className='mt-1 shrink-0 text-[#ECDFCC]' aria-hidden='true' />
+                <span>{user.hostel_address}</span>
+              </p>
+            )}
+
+            {user.hostel_description && (
+              <p className='mt-4 max-w-lg text-sm leading-7 text-white/85 sm:text-base'>
+                {user.hostel_description}
+              </p>
+            )}
+
+            {nearbyInstitutes.length > 0 && (
+              <div className='mt-5'>
+                <p className='mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55'>Nearby institutes</p>
+                <div className='flex flex-wrap gap-2'>
+                  {nearbyInstitutes.map((institute) => (
+                    <span key={institute._id || institute.university} className='rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/90'>
+                      {institute.university}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
+          {!editMode && (
+            <button
+              onClick={startEdit}
+              className='mt-6 w-fit rounded-lg border border-white/15 bg-[#697565] px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#3C3D37] focus:outline-none focus:ring-2 focus:ring-[#ECDFCC]'
+            >
+              <span className='flex items-center gap-2'>
+                <FaEdit /> Change Picture
+              </span>
+            </button>
+          )}
         </div>
-      )}
-      <div className='p-4 text-white text-center mt-20'>
-        <h2 className='text-2xl font-bold'>{user.hostel_name}</h2>
-        <p className='text-lg font-semibold'>{user.hostel_address}</p>
-        <p>Description: {user.hostel_description}</p>
-        <h2 className='text-2xl font-bold pt-8'>Nearby Universities</h2>
-        <ul>
-          {user.nearby_institutes.map((institute) => (
-            <li key={institute._id} className='text-xl'>{institute.university}</li>
-          ))}
-        </ul>
       </div>
-    </div>
+
+      {editMode && (
+        <form onSubmit={handleSave} className='mt-4 rounded-xl bg-[#25292e] p-4'>
+          <ImageUploadField
+            label="Hostel Picture"
+            name="hostelPicture"
+            value={editPicture}
+            onChange={setEditPicture}
+            uploadType="hostel"
+          />
+          {error && <div className='mb-2 text-sm text-red-500'>{error}</div>}
+          <div className='flex gap-3'>
+            <button type='submit' disabled={saving} className='rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-60'>
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+            <button type='button' onClick={() => setEditMode(false)} className='rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700'>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+    </section>
   );
 };
 

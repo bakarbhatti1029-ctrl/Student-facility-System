@@ -4,7 +4,7 @@ const adminSchema = new mongoose.Schema({
     first_name: { type: String, required: true },
     last_name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, select: false },
     profile_picture: { type: String, required: false, default: '' },
     email_verified: { type: Boolean, required: true, default: false },
     verification_token: { type: String, required: false },

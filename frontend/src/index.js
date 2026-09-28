@@ -9,6 +9,68 @@ import { ToastContainer } from 'react-toastify';
 import { store } from './store/store';
 import './index.css';
 import App from './App';
+import axios from 'axios';
+
+// Send the HTTP-only session cookie and double-submit CSRF token on writes.
+axios.defaults.withCredentials = true;
+const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const csrfClient = axios.create({ baseURL: apiBaseUrl, withCredentials: true });
+let csrfToken = null;
+let csrfRequest = null;
+
+// Keep one in-flight token request for the whole app. Without this, two
+// simultaneous writes can receive different tokens: the browser stores the
+// later cookie while the earlier request sends the older header, causing a
+// false "Invalid or missing CSRF token" response.
+const getCsrfToken = async ({ refresh = false } = {}) => {
+  if (!refresh && csrfToken) return csrfToken;
+  if (csrfRequest) return csrfRequest;
+
+  csrfRequest = csrfClient.get('/auth/csrf')
+    .then((response) => {
+      csrfToken = response.data.csrfToken;
+      return csrfToken;
+    })
+    .finally(() => {
+      csrfRequest = null;
+    });
+  return csrfRequest;
+};
+
+const setCsrfHeader = (config, token) => {
+  config.headers = config.headers || {};
+  // Bracket assignment works with both AxiosHeaders (Axios 1.x) and a plain
+  // object, including mobile browser builds where `.set()` is not available.
+  config.headers['X-CSRF-Token'] = token;
+};
+
+axios.interceptors.request.use(async (config) => {
+  if (!['get', 'head', 'options'].includes((config.method || 'get').toLowerCase())) {
+    const token = await getCsrfToken();
+    if (token) setCsrfHeader(config, token);
+  }
+  return config;
+});
+axios.interceptors.response.use((response) => {
+  const refreshedCsrfToken = response.headers['x-csrf-token'];
+  if (refreshedCsrfToken) csrfToken = refreshedCsrfToken;
+  return response;
+}, async (error) => {
+  const request = error.config;
+  const isCsrfFailure = error.response?.status === 403
+    && error.response?.data?.message === 'Invalid or missing CSRF token.';
+
+  // A cookie may have been rotated in another tab or during a slow mobile
+  // connection. Refresh once and replay the original request; never retry
+  // repeatedly, so a genuine permission failure remains visible.
+  if (request && isCsrfFailure && !request.__csrfRetried) {
+    request.__csrfRetried = true;
+    const token = await getCsrfToken({ refresh: true });
+    if (token) setCsrfHeader(request, token);
+    return axios(request);
+  }
+  return Promise.reject(error);
+});
 
 // Prevent a flash of unstyled React content on slow connections. In the
 // production build CRA extracts our CSS to /static/css/*.css; reveal the app

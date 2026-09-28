@@ -34,6 +34,8 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const geoRoutes = require('./routes/geoRoutes');
 const pushNotificationRoutes = require('./routes/pushNotificationRoutes');
 const errorHandler = require('./middlewares/errorHandler');
+const logger = require('./utils/logger');
+const csrfProtection = require('./middlewares/csrfProtection');
 
 const app = express();
 const server = http.createServer(app);
@@ -51,29 +53,8 @@ app.use(
   })
 );
 
-// Generic rate limiter for the whole API - generous, just a backstop.
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(generalLimiter);
-
-// Stricter limiter for auth endpoints most worth protecting from
-// brute-force / spam: login, register, forgot-password.
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { message: 'Too many attempts. Please try again in a few minutes.' },
-});
-
-// Initialize Socket.IO
-const io = connectSocket(server);
-
-// Middleware
+// CORS must run before rate limiting so browser clients can read a 429
+// response and its RateLimit-Reset header.
 const allowedOrigins = process.env.ALLOWED_ORIGIN
   ? process.env.ALLOWED_ORIGIN.split(',').map(o => o.trim())
   : ['http://localhost:3000'];
@@ -87,21 +68,54 @@ const corsOptions = {
   },
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+  exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'X-CSRF-Token']
 };
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
+// Generic rate limiter for the whole API - generous, just a backstop.
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests. Please wait a few minutes and try again.' },
+});
+app.use(generalLimiter);
+
+// Stricter limiter for auth endpoints most worth protecting from
+// brute-force / spam: login, register, forgot-password.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many attempts. Please try again in a few minutes.' },
+});
+
+const adminPasswordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many password reset attempts. Please try again in 15 minutes.' },
+});
+
+// Initialize Socket.IO
+const io = connectSocket(server);
+
 // Request logging middleware for debugging
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  logger.debug(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
   next();
 });
 
 // Body parsers - must be before routes
 app.use(express.json({ limit: '50mb' }));  // Increased limit for image data
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(csrfProtection);
 
 // Connect to MongoDB
 connectDB();
@@ -121,6 +135,11 @@ app.get('/', (req, res) => res.send('Hello World!'));
 app.use('/auth/login', authLimiter);
 app.use('/auth/register', authLimiter);
 app.use('/auth/forgot-password', authLimiter);
+app.use('/api/admin/resend-superadmin-verification', authLimiter);
+app.use('/api/admin/verify-superadmin', authLimiter);
+app.use('/api/admin/forgot-password', adminPasswordResetLimiter);
+app.use('/api/admin/verify-password-reset-otp', adminPasswordResetLimiter);
+app.use('/api/admin/reset-password', adminPasswordResetLimiter);
 app.use('/auth', authUsers);
 app.use('/profile', profileRoutes);
 app.use('/hostel', hostelRoutes);

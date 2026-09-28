@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../utils/api';
 
@@ -11,9 +10,8 @@ const ResetPasswordScreen = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Clear token and session data when navigating away from this screen
+    // Clear temporary reset-flow state when leaving the screen.
     return () => {
-      Cookies.remove('token');
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('verified');
     };
@@ -22,34 +20,23 @@ const ResetPasswordScreen = () => {
   const formik = useFormik({
     initialValues: {
       password: '',
-      confirmPassword: '',
-    },
+      confirmPassword: '' },
     validationSchema: Yup.object({
       password: Yup.string().required('Required'),
       confirmPassword: Yup.string()
         .oneOf([Yup.ref('password'), null], 'Passwords must match')
-        .required('Required'),
-    }),
+        .required('Required') }),
     onSubmit: async (values) => {
       try {
-        const token = Cookies.get('token');
         await axios.patch(`${API_BASE_URL}/auth/reset-password`, {
           password: values.password,
-          confirmPassword: values.confirmPassword,
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        // Clear user session and redirect
-        Cookies.remove('token'); // Remove token from cookies
-        sessionStorage.removeItem('user'); // Clear user session
+          confirmPassword: values.confirmPassword });
+        sessionStorage.removeItem('user');
         navigate('/loginform'); // Redirect to login
       } catch (error) {
         setError('Failed to reset password.');
       }
-    },
-  });
+    } });
 
   return (
     <div className='bg-black min-h-screen flex items-center justify-center'>

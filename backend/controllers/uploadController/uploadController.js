@@ -9,7 +9,7 @@ const logger = require('../../utils/logger');
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE_MB = 5;
 
-exports.uploadImage = async (req, res) => {
+async function uploadImage(req, res, allowedFolders) {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No image file was provided.' });
@@ -34,7 +34,11 @@ exports.uploadImage = async (req, res) => {
       });
     }
 
-    const folder = `sfs/${req.body.type || 'general'}`;
+    const type = String(req.body.type || 'general').toLowerCase();
+    if (!allowedFolders.has(type)) {
+      return res.status(400).json({ message: 'Invalid image upload type.' });
+    }
+    const folder = `sfs/${type}`;
 
     const uploadFromBuffer = () =>
       new Promise((resolve, reject) => {
@@ -63,4 +67,20 @@ exports.uploadImage = async (req, res) => {
     logger.error('Cloudinary upload error:', error);
     return res.status(500).json({ message: 'Image upload failed. Please try again, or use the "Image URL" option.' });
   }
-};
+}
+
+// Used by authenticated profile, room and dish management.
+exports.uploadImage = (req, res) => uploadImage(
+  req,
+  res,
+  new Set(['general', 'profile', 'hostel', 'kitchen', 'room', 'dish'])
+);
+
+// Registration happens before a user can authenticate. Keep that exception
+// deliberately narrow: only profile/hostel/kitchen images are permitted and
+// the route has its own stricter rate limit in uploadRoutes.js.
+exports.uploadRegistrationImage = (req, res) => uploadImage(
+  req,
+  res,
+  new Set(['profile', 'hostel', 'kitchen'])
+);

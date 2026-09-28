@@ -93,7 +93,7 @@ exports.createOrder = async (req, res, next) => {
         description: `Order from ${kitchenName}`,
       });
     } catch (stripeError) {
-      console.error('Stripe payment intent error (order):', stripeError.message);
+      logger.error('Stripe payment intent error (order):', stripeError.message);
       return res.status(402).json({
         message: stripeError.message || 'Payment was declined by Stripe. Please check your card details and try again.',
         code: stripeError.code,
@@ -167,7 +167,7 @@ exports.createOrder = async (req, res, next) => {
 
     res.status(201).json({ success: true, requiresAction: false, order: newOrder });
   } catch (error) {
-    console.error("Error creating order:", error);
+    logger.error('Error creating order:', error);
     next(error);
   }
 };
@@ -206,7 +206,7 @@ exports.confirmOrderPayment = async (req, res, next) => {
 
     res.status(200).json({ success: true, order });
   } catch (error) {
-    console.error('Error confirming order payment:', error);
+    logger.error('Error confirming order payment:', error);
     next(error);
   }
 };
@@ -229,8 +229,27 @@ exports.updateOrderStatus = async (req, res, next) => {
       return res.status(409).json({ message: 'This order has expired and can no longer be accepted.' });
     }
 
-    order.status = req.body.status;
-    if (req.body.status === 'Confirm Order' && !order.acceptedAt) order.acceptedAt = new Date();
+    const nextStatus = req.body.status;
+    if (!['Confirm Order', 'Preparing Order', 'Delivered', 'Completed', 'Cancelled'].includes(nextStatus)) {
+      return res.status(400).json({ message: 'Invalid order status.' });
+    }
+    if (nextStatus === 'Cancelled' && order.paymentStatus === 'paid') {
+      if (!order.stripePaymentIntentId) {
+        return res.status(409).json({ message: 'Paid order is missing its payment reference and cannot be cancelled automatically.' });
+      }
+      try {
+        await stripe.refunds.create({ payment_intent: order.stripePaymentIntentId });
+        order.paymentStatus = 'refunded';
+        order.cancelledAt = new Date();
+        order.cancellationReason = 'Cancelled by kitchen owner';
+      } catch (refundError) {
+        logger.error('Order cancellation refund failed:', refundError.message);
+        return res.status(502).json({ message: 'Refund failed; the order was not cancelled.' });
+      }
+    }
+
+    order.status = nextStatus;
+    if (nextStatus === 'Confirm Order' && !order.acceptedAt) order.acceptedAt = new Date();
     await order.save();
 
     const io = req.app.get('io'); // Get Socket.IO instance

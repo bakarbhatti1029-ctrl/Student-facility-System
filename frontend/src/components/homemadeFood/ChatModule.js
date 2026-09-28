@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
-import Cookies from 'js-cookie';
+import { useSelector } from 'react-redux';
 import API_BASE_URL from '../../utils/api';
 
 const ChatModule = ({ orderId, kitchenId, orderStatus }) => { // Add orderStatus as a prop
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const userId = JSON.parse(atob(Cookies.get('token').split('.')[1])).id;
+  const userId = useSelector((state) => state.auth.user?._id);
 
   useEffect(() => {
-    const token = Cookies.get('token');
 
     // Initialize socket connection (authenticated — the backend rejects
     // connections without a valid token)
     const newSocket = io(API_BASE_URL, {
       transports: ['websocket'],
       withCredentials: true,
-      auth: { token },
     });
     setSocket(newSocket);
 
@@ -27,8 +25,7 @@ const ChatModule = ({ orderId, kitchenId, orderStatus }) => { // Add orderStatus
 
     // Fetch chat history from the backend
     axios.get(`${API_BASE_URL}/api/chats/${orderId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then((res) => {
+      headers: { } }).then((res) => {
       setMessages(res.data);
     });
 
@@ -64,8 +61,8 @@ const ChatModule = ({ orderId, kitchenId, orderStatus }) => { // Add orderStatus
 
       // Clear input field
       setNewMessage('');
-    } catch (error) {
-      console.error('Failed to send message:', error);
+    } catch {
+      // The socket error event supplies user-visible failures when available.
     }
   };
 

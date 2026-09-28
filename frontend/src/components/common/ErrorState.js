@@ -8,42 +8,32 @@ import { FaRedo } from 'react-icons/fa';
 const STATUS_CONTENT = {
   400: {
     title: 'Tom fumbled that one',
-    description: 'Something about this request tripped things up. Please check the details and try again.',
-  },
+    description: 'Something about this request tripped things up. Please check the details and try again.' },
   401: {
     title: 'Tom chased your session away!',
-    description: "Looks like you've been logged out. Log back in and we'll pick up right where you left off.",
-  },
+    description: "Looks like you've been logged out. Log back in and we'll pick up right where you left off." },
   402: {
     title: 'Jerry ran off with the payment',
-    description: "Your payment couldn't go through. Please check your card details and try again.",
-  },
+    description: "Your payment couldn't go through. Please check your card details and try again." },
   403: {
     title: "Tom says you can't come in",
-    description: "You don't have permission to do that.",
-  },
+    description: "You don't have permission to do that." },
   404: {
     title: "Jerry's hiding this page",
-    description: "We couldn't find what you were looking for.",
-  },
+    description: "We couldn't find what you were looking for." },
   409: {
     title: 'Already chased, already done!',
-    description: 'Looks like this was already done. Refreshing might help.',
-  },
+    description: 'Looks like this was already done. Refreshing might help.' },
   429: {
     title: 'Whoa there, slow down!',
-    description: 'Too many chases too fast! Take a breath and try again in a moment.',
-  },
+    description: 'Too many chases too fast! Take a breath and try again in a moment.' },
   500: {
     title: 'Uh-oh, Jerry knocked something over',
-    description: 'Something unexpected happened on our end. Please try again shortly.',
-  },
-};
+    description: 'Something unexpected happened on our end. Please try again shortly.' } };
 
 const DEFAULT_CONTENT = {
   title: 'Lost the trail',
-  description: "We couldn't reach the server. Check your connection and try again.",
-};
+  description: "We couldn't reach the server. Check your connection and try again." };
 
 // Axios's own default error message ("Request failed with status code 401")
 // isn't useful to show verbatim - prefer the themed description for it.
