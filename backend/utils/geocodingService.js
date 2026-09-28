@@ -6,7 +6,9 @@ const getLatLngFromAddress = async (address) => {
         const response = await axios.get(`https://nominatim.openstreetmap.org/search`, {
             params: {
                 q: address,
-                format: 'json',
+                format: 'jsonv2',
+                addressdetails: 1,
+                'accept-language': 'en',
                 limit: 1
             },
             // Nominatim's usage policy requires a custom User-Agent identifying

@@ -40,7 +40,7 @@ Student Facility System (SFS) brings essential student services into a single re
 
 | Area | Capabilities |
 |---|---|
-| 🔐 Authentication | Role-based registration, email OTP verification, login, and password recovery |
+| 🔐 Authentication | Role-based registration, email OTP verification, login, and password recovery for students, providers, and administrators |
 | 🏠 Hostels | Search and filter listings, map-based discovery, room/bed availability, and booking management |
 | 🍲 Homemade food | Browse kitchens and dishes, manage a cart, place orders, and follow order progress |
 | 💳 Payments | Stripe-powered checkout for hostel bookings and food orders |
@@ -51,7 +51,7 @@ Student Facility System (SFS) brings essential student services into a single re
 | 📍 Location | Leaflet maps, OpenStreetMap data, geocoding, and institute-aware discovery |
 | 📄 Receipts | Downloadable PDF invoices and transactional email attachments |
 | 🖼️ Media | Cloudinary-backed profile and listing image uploads |
-| 🛡️ Administration | Platform statistics, account moderation, listing management, and admin controls |
+| 🛡️ Administration | Super-admin onboarding and email verification, admin password recovery, platform statistics, account moderation, and listing management |
 
 ## 👥 Built for every role
 
@@ -59,6 +59,14 @@ Student Facility System (SFS) brings essential student services into a single re
 - **Hostel owners** — publish hostels and rooms, manage bed availability, review booking requests, and monitor performance.
 - **Kitchen owners** — manage kitchens and dishes, process orders, and track sales activity.
 - **Administrators** — oversee users, providers, listings, platform metrics, and account access.
+
+### Admin onboarding and password recovery
+
+The initial super-admin account can be created through the admin registration API. It starts unverified; after signing in to the admin portal, the super-admin changes the initial password and confirms the emailed OTP to verify the account. Other admin accounts follow the existing super-admin-controlled registration and verification process.
+
+Administrators can also select **Forgot password?** on the admin login page, request an email OTP, verify it, and set a new password. Reset requests are rate limited, and the API does not disclose whether an email address belongs to an admin account. Both flows deliver codes using the configured Brevo email service.
+
+See the [backend README](backend/README.md#first-time-super-admin-setup-postman) for the Postman setup steps, OTP details, and admin recovery API endpoints.
 
 ## 🧰 Technology stack
 
@@ -276,6 +284,42 @@ Read the [complete deployment guide](DEPLOYMENT_GUIDE.md) for environment config
 
 If a secret is ever exposed, revoke it at the provider, generate a replacement, and update the deployment environment immediately.
 
+## Authentication hardening migration (September 2026)
+
+SFS now keeps signed session JWTs in the `sfs_session` **HTTP-only cookie** instead of returning or storing a readable token in the browser. This prevents page JavaScript from reading the session credential. The frontend restores the signed-in user through `GET /auth/me`; REST calls and Socket.IO connections use the cookie automatically.
+
+State-changing requests made with a session cookie use a double-submit CSRF token: the `sfs_csrf` cookie must match the `X-CSRF-Token` header. The Axios interceptor obtains the value from `GET /auth/csrf`. These two protections are documented so future refactors do not accidentally keep one protection while removing the other.
+
+After Stripe accepts a hostel payment, the occupied-bed state and booking record are saved in one MongoDB transaction. This prevents a partially saved booking if one database write fails.
+
+Comments in the relevant middleware, session utility, Socket.IO setup, and booking controller explain what changed and why. Keep those comments when refactoring these flows.
+
+### Test the migration
+
+```bash
+cd backend
+npm test -- --runInBand
+```
+
+The suite includes cookie-parsing and CSRF-request tests. Before production deployment, also test login, registration-image upload, Stripe test-card payment/refund, and deployed VAPID/Brevo configuration.
+
+### Revert safely later
+
+Do not use `git reset --hard` on a shared branch. First identify the migration commit:
+
+```bash
+git log --oneline
+```
+
+Then create a new commit that reverses it while preserving history:
+
+```bash
+git revert <migration-commit-sha>
+git push origin main
+```
+
+If later commits depend on this migration, revert those first or resolve conflicts deliberately. A code revert does not invalidate cookies already issued; rotate `JWT_SECRET` if an emergency session invalidation is needed.
+
 ## 👨‍💻 Project team
 
 <div align="center">
@@ -311,3 +355,15 @@ This project is available under the [MIT License](backend/LICENSE).
   ·
   <a href="DEPLOYMENT_GUIDE.md">Deployment guide</a>
 </div>
+
+
+## Recent security and reliability updates
+
+- Sensitive password and reset fields are excluded from API responses.
+- Password-reset OTPs are account-scoped, one-time, and issue short-lived reset tokens.
+- Banned/deleted accounts are rejected on login and authenticated requests.
+- Bed reservation is atomic before Stripe payment processing; cancellations request refunds before local state changes.
+- Active booking/order records and booked beds are protected from deletion.
+- Authenticated Cloudinary uploads are separated from a restricted, rate-limited registration-image flow.
+
+- The chatbot has a bounded response cache and a responsive, redesigned interface.

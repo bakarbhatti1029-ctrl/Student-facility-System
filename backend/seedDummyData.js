@@ -110,6 +110,28 @@ async function resolveDemoUniversityCoords() {
   return coords;
 }
 
+function distanceBetweenKm(fromLat, fromLng, toLat, toLng) {
+  if ([fromLat, fromLng, toLat, toLng].some(value => !Number.isFinite(value))) return null;
+  const radians = degrees => degrees * Math.PI / 180;
+  const earthRadiusKm = 6371;
+  const latDelta = radians(toLat - fromLat);
+  const lngDelta = radians(toLng - fromLng);
+  const a = Math.sin(latDelta / 2) ** 2
+    + Math.cos(radians(fromLat)) * Math.cos(radians(toLat))
+    * Math.sin(lngDelta / 2) ** 2;
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistanceKm(hostel, universityCoords) {
+  const distance = distanceBetweenKm(
+    hostel.hostel_lat,
+    hostel.hostel_lng,
+    universityCoords.lat,
+    universityCoords.lng,
+  );
+  return distance == null ? null : `${distance.toFixed(1)} km`;
+}
+
 // ─── All 8 facilities that match both the filter dropdown and registration form ─
 // IMPORTANT: These exact strings must match Hostels.js ALL_FACILITIES array
 const ALL_FACILITIES = ['Wi-Fi', 'AC', 'CCTV', 'Generator', 'Laundry', 'Parking', 'Water Cooler', 'Study Room'];
@@ -361,6 +383,8 @@ async function seedDummyData() {
         const uni2 = UNIVERSITIES[h.nearby[1].uni];
         const uni1Coords = uniCoords[uni1.name] || {};
         const uni2Coords = uniCoords[uni2.name] || {};
+        const uni1Distance = formatDistanceKm(h, uni1Coords);
+        const uni2Distance = formatDistanceKm(h, uni2Coords);
         const facilities = FACILITIES_SETS[i % FACILITIES_SETS.length];
 
         const hostelOwner = new HostelOwner({
@@ -378,12 +402,12 @@ async function seedDummyData() {
           hostel_lat: h.hostel_lat,
           hostel_lng: h.hostel_lng,
           hostel_type: h.hostel_type,
-          hostel_description: `${h.hostel_name} provides comfortable and affordable accommodation for students in ${h.area}, Lahore. Located just ${h.nearby[0].dist} from ${uni1.name}. Clean rooms, 24/7 security, uninterrupted power supply, and a friendly environment for focused studies.`,
+          hostel_description: `${h.hostel_name} provides comfortable and affordable accommodation for students in ${h.area}, Lahore.${uni1Distance ? ` Located approximately ${uni1Distance} from ${uni1.name}.` : ''} Clean rooms, 24/7 security, uninterrupted power supply, and a friendly environment for focused studies.`,
           hostel_picture: hImg(i + 2),
           facilities,
           nearby_institutes: [
-            { university: uni1.name, distance: h.nearby[0].dist, university_lat: uni1Coords.lat, university_lng: uni1Coords.lng },
-            { university: uni2.name, distance: h.nearby[1].dist, university_lat: uni2Coords.lat, university_lng: uni2Coords.lng },
+            { university: uni1.name, distance: uni1Distance, university_lat: uni1Coords.lat, university_lng: uni1Coords.lng },
+            { university: uni2.name, distance: uni2Distance, university_lat: uni2Coords.lat, university_lng: uni2Coords.lng },
           ],
           email_verified: true,
           isApproved: true,

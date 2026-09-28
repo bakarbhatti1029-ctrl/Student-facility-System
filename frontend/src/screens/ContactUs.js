@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock, FaPaperPlane } from 'react-icons/fa';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -9,8 +8,7 @@ import API_BASE_URL from "../utils/api";
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', subject: 'General Inquiry', message: '' });
-  const [token, setToken] = useState(null);
-  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,27 +25,16 @@ const ContactUs = () => {
   ];
 
   useEffect(() => {
-    const authToken = Cookies.get('token');
-    const storedUser = sessionStorage.getItem('user');
 
-    if (authToken) {
-      setToken(authToken);
-    }
-
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
+    axios.get(`${API_BASE_URL}/auth/me`).then(({ data }) => {
+        const parsedUser = data.user;
+        setIsAuthenticated(true);
         setFormData((prev) => ({
           ...prev,
           name: `${parsedUser.first_name || parsedUser.firstName || ''} ${parsedUser.last_name || parsedUser.lastName || ''}`.trim(),
           phone: parsedUser.phone_number || parsedUser.phone || prev.phone,
-          email: parsedUser.email || prev.email,
-        }));
-      } catch (error) {
-        console.error('Unable to parse stored user data for contact form', error);
-      }
-    }
+          email: parsedUser.email || prev.email }));
+    }).catch(() => setIsAuthenticated(false));
   }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -55,15 +42,14 @@ const ContactUs = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!token) {
+    if (!isAuthenticated) {
       setError('Please log in to submit a complaint.');
       return;
     }
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/api/contact/submit`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
       setSubmitted(true);
       setFormData({ name: formData.name, phone: formData.phone, email: formData.email, subject: 'General Inquiry', message: '' });
       setTimeout(() => setSubmitted(false), 5000);
@@ -114,7 +100,7 @@ const ContactUs = () => {
           </div>
           <div className="bg-[#25292e] shadow-lg rounded-2xl p-8">
             <h2 className="text-2xl font-bold mb-6 text-white text-center">Send a Message</h2>
-            {!token && (
+            {!isAuthenticated && (
               <div className="mb-4 p-3 bg-yellow-900 border border-yellow-500 text-yellow-200 rounded-lg text-center">
                 You must be logged in to submit a complaint. <a href="/loginform" className="underline">Login here</a>.
               </div>
@@ -148,7 +134,7 @@ const ContactUs = () => {
                   className="w-full bg-[#1E201E] border border-[#59636e] text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#697565] resize-none"
                   placeholder="How can we help you?" />
               </div>
-              <button type="submit" disabled={loading || !token} className="w-full bg-[#697565] hover:bg-[#3C3D37] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
+              <button type="submit" disabled={loading || !isAuthenticated} className="w-full bg-[#697565] hover:bg-[#3C3D37] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2">
                 <FaPaperPlane /> {loading ? 'Sending...' : 'Send Message'}
               </button>
             </form>

@@ -1,39 +1,34 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import API_BASE_URL from '../utils/api';
 
 export const fetchAllDishes = createAsyncThunk('kitchens/fetchAllDishes', async (_, { rejectWithValue }) => {
-  const token = Cookies.get('token');
+
   try {
     const response = await axios.get(`${API_BASE_URL}/api/dishes/getAllDishes`, {
       headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+        
+      } });
     return response.data;
   } catch (error) {
     return rejectWithValue({
       message: error.response?.data?.message || error.message,
-      status: error.response?.status,
-    });
+      status: error.response?.status });
   }
 });
 
 export const addItem = createAsyncThunk(
   'kitchens/addItem',
   async (itemDetails, { rejectWithValue }) => {
-    const token = Cookies.get('token');
+
     try {
       const response = await axios.post(`${API_BASE_URL}/api/dishes/createDish`, itemDetails, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
       return response.data;
     } catch (error) {
       return rejectWithValue({
         message: error.response?.data?.message || error.message,
-        status: error.response?.status,
-      });
+        status: error.response?.status });
     }
   }
 );
@@ -41,17 +36,15 @@ export const addItem = createAsyncThunk(
 export const updateItem = createAsyncThunk(
   'kitchens/updateItem',
   async ({ id, itemDetails }, { rejectWithValue }) => {
-    const token = Cookies.get('token');
+
     try {
       const response = await axios.put(`${API_BASE_URL}/api/dishes/updateDish/${id}`, itemDetails, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
       return response.data;
     } catch (error) {
       return rejectWithValue({
         message: error.response?.data?.message || error.message,
-        status: error.response?.status,
-      });
+        status: error.response?.status });
     }
   }
 );
@@ -59,10 +52,9 @@ export const updateItem = createAsyncThunk(
 export const deleteItem = createAsyncThunk(
   'kitchens/deleteItem',
   async (id) => {
-    const token = Cookies.get('token');
+
     await axios.delete(`${API_BASE_URL}/api/dishes/deleteDish/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }, 
-    });
+      headers: { } });
     return id;
   }
 );
@@ -70,10 +62,9 @@ export const deleteItem = createAsyncThunk(
 export const fetchItem = createAsyncThunk(
   'kitchens/fetchItem',
   async (id) => {
-    const token = Cookies.get('token');
+
     const response = await axios.get(`${API_BASE_URL}/api/dishes/getDish/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      headers: { } });
     return response.data;
   }
 );
@@ -116,7 +107,6 @@ const kitchenSlice = createSlice({
           state.dishes.push(action.payload);
         }
       });
-  },
-});
+  } });
 
 export default kitchenSlice.reducer;

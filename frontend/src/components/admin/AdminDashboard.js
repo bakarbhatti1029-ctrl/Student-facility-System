@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ImageUploadField from '../common/ImageUploadField';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-} from 'recharts';
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {
   FaUsers, FaHome, FaUtensils, FaBuilding, FaList, FaChartBar,
   FaSignOutAlt, FaBan, FaTrash, FaCheck, FaTimes,
@@ -13,8 +12,7 @@ import {
   FaExclamationTriangle, FaKey, FaLock, FaBell, FaCamera,
   FaBoxOpen, FaChevronRight,
   FaEnvelopeOpenText, FaEnvelope, FaCheckDouble, FaPhone, FaWhatsapp, FaReply,
-  FaCalendarAlt, FaCheckCircle, FaCalendarCheck, FaShoppingBag, FaSearch, FaBars,
-} from 'react-icons/fa';
+  FaCalendarAlt, FaCheckCircle, FaCalendarCheck, FaShoppingBag, FaSearch, FaBars } from 'react-icons/fa';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const MAX_MINI_ADMINS = 4;
@@ -52,8 +50,7 @@ const ink = {
   sideFaint: '#8CA094',
   sideActive:'#375243',
   rustDim:   '#FBEAE6',
-  rustLine:  '#F0C7BC',
-};
+  rustLine:  '#F0C7BC' };
 
 // Fixed-order categorical hues for multi-series charts (colorblind-safe, validated
 // against this dashboard's white chart surface — see dataviz skill palette check).
@@ -79,8 +76,7 @@ const Pill = ({ tone='neutral', children }) => {
     strong:  { background: ink.brand, color: '#FFFFFF' },
     amber:   { background: '#8A6D3B', color: '#FFFFFF' },
     muted:   { background: '#3C3D37', color: '#D6D6D2' },
-    danger:  { background: '#8F3B28', color: '#FFFFFF' },
-  };
+    danger:  { background: '#8F3B28', color: '#FFFFFF' } };
   return (
     <span style={{ ...styles[tone], ...body, fontSize: 11, letterSpacing: '0.03em' }}
       className="px-2.5 py-1 rounded-full uppercase font-semibold whitespace-nowrap inline-block">
@@ -128,8 +124,7 @@ const Action = ({ onClick, icon, label, tone='default' }) => {
   const tones = {
     default: { background: ink.surface, color: '#3C3D37', border: `1px solid ${ink.line}` },
     go:      { background: ink.brand, color: '#FFFFFF' },
-    danger:  { background: '#8F3B28', color: '#FFFFFF' },
-  };
+    danger:  { background: '#8F3B28', color: '#FFFFFF' } };
   return (
     <button onClick={onClick}
       className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-2 rounded-lg transition hover:opacity-75"
@@ -324,9 +319,8 @@ const ListingDetails = ({ listing, onClose }) => {
 
 const AdminDashboard = () => {
   const navigate  = useNavigate();
-  const token     = localStorage.getItem('adminToken');
-  const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
-  const isSuperAdmin = adminData.role === 'super_admin';
+  const [adminData, setAdminData] = useState(null);
+  const isSuperAdmin = adminData?.role === 'super_admin';
 
   const [stats,        setStats]        = useState({});
   const [growth,       setGrowth]       = useState([]);
@@ -366,21 +360,30 @@ const AdminDashboard = () => {
   const [cpError,  setCpError]  = useState('');
   const [cpSuccess,setCpSuccess]= useState('');
   const [cpLoading,setCpLoading]= useState(false);
+  const [cpNeedsVerification, setCpNeedsVerification] = useState(false);
+  const [cpOtp, setCpOtp] = useState('');
+  const [cpVerified, setCpVerified] = useState(false);
 
   const [showEditProfilePic, setShowEditProfilePic] = useState(false);
-  const [myProfilePic, setMyProfilePic] = useState(adminData.profile_picture || '');
-  const [ppInput,   setPpInput]   = useState(adminData.profile_picture || '');
+  const [myProfilePic, setMyProfilePic] = useState('');
+  const [ppInput,   setPpInput]   = useState('');
   const [ppError,   setPpError]   = useState('');
   const [ppLoading, setPpLoading] = useState(false);
 
   const [search, setSearch] = useState('');
 
-  const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+  const authHeaders = { headers: { } };
 
-  useEffect(() => { if (!token) navigate('/admin/login'); }, [token, navigate]);
-  useEffect(() => { if (token) { fetchStats(); fetchGrowth(); fetchMessages(); if (isSuperAdmin) fetchMiniAdmins(); } }, [token]);
   useEffect(() => {
-    if (!token) return;
+    axios.get(`${API_BASE_URL}/api/admin/me`).then(({ data }) => {
+      setAdminData(data.admin);
+      setMyProfilePic(data.admin.profile_picture || '');
+      setPpInput(data.admin.profile_picture || '');
+    }).catch(() => navigate('/admin/login'));
+  }, [navigate]);
+  useEffect(() => { if (adminData) { fetchStats(); fetchGrowth(); fetchMessages(); if (isSuperAdmin) fetchMiniAdmins(); } }, [adminData, isSuperAdmin]);
+  useEffect(() => {
+    if (!adminData) return;
     setSubjectFilter('');
     if (activeTab === 'students')      fetchStudents();
     else if (activeTab === 'hostelOwners')  fetchHostelOwners();
@@ -389,7 +392,7 @@ const AdminDashboard = () => {
     else if (activeTab === 'kitchens')  fetchKitchens();
     else if (activeTab === 'admins' && isSuperAdmin) fetchMiniAdmins();
     else if (activeTab === 'messages') fetchMessages();
-  }, [activeTab]);
+  }, [activeTab, adminData, isSuperAdmin]);
 
   const fetchStats        = async () => { try { const r = await axios.get(`${API_BASE_URL}/api/admin/stats`, authHeaders); setStats(r.data); } catch(e){} };
   const fetchGrowth       = async () => { try { const r = await axios.get(`${API_BASE_URL}/api/admin/growth-stats`, authHeaders); setGrowth(r.data.data||[]); } catch(e){} };
@@ -462,8 +465,61 @@ const AdminDashboard = () => {
     if(cpForm.newPassword.length<6){setCpError('Min. 6 characters.');return;}
     if(cpForm.currentPassword===cpForm.newPassword){setCpError('New password must differ from current.');return;}
     setCpLoading(true);
-    try { await axios.patch(`${API_BASE_URL}/api/admin/change-password`,{currentPassword:cpForm.currentPassword,newPassword:cpForm.newPassword,confirmPassword:cpForm.confirmPassword},authHeaders); setCpSuccess('Password changed! Logging you out...'); setCpForm({currentPassword:'',newPassword:'',confirmPassword:''}); setTimeout(()=>handleLogout(),3000); }
-    catch(err){setCpError(err.response?.data?.message||'Failed.');}
+    try {
+      const res = await axios.patch(`${API_BASE_URL}/api/admin/change-password`,{
+        currentPassword:cpForm.currentPassword,
+        newPassword:cpForm.newPassword,
+        confirmPassword:cpForm.confirmPassword },authHeaders);
+      setCpForm({currentPassword:'',newPassword:'',confirmPassword:''});
+      if (res.data.requiresVerification) {
+        setCpNeedsVerification(true);
+        setCpSuccess(res.data.message || `A verification code was sent to ${adminData.email}.`);
+      } else {
+        setCpSuccess('Password changed! Logging you out...');
+        setTimeout(()=>handleLogout(),3000);
+      }
+    }
+    catch(err){
+      if (err.response?.data?.requiresVerification && err.response?.data?.passwordChanged) {
+        setCpNeedsVerification(true);
+      }
+      setCpError(err.response?.data?.message||'Failed.');
+    }
+    setCpLoading(false);
+  };
+
+  const handleResendSuperAdminCode = async () => {
+    setCpError('');
+    setCpLoading(true);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/admin/resend-superadmin-verification`, {
+        email: adminData.email });
+      setCpSuccess(res.data.message);
+      toast.success('A new verification code was sent if the account is still unverified.');
+    } catch(err) {
+      setCpError(err.response?.data?.message || 'Could not resend the verification code.');
+    }
+    setCpLoading(false);
+  };
+
+  const handleVerifySuperAdminEmail = async (e) => {
+    e.preventDefault();
+    setCpError('');
+    if (!cpOtp.trim()) { setCpError('Enter the verification code from your email.'); return; }
+    setCpLoading(true);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/admin/verify-superadmin`, {
+        email: adminData.email,
+        otp: cpOtp.trim() });
+      const verifiedAdminData = { ...adminData, email_verified: true };
+      setAdminData(verifiedAdminData);
+      setCpSuccess(res.data.message || 'Email verified successfully.');
+      setCpOtp('');
+      setCpVerified(true);
+      toast.success('Super admin email verified.');
+    } catch(err) {
+      setCpError(err.response?.data?.message || 'Verification failed. Check the code and try again.');
+    }
     setCpLoading(false);
   };
 
@@ -473,7 +529,7 @@ const AdminDashboard = () => {
     try {
       const res = await axios.patch(`${API_BASE_URL}/api/admin/profile-picture`, { profile_picture: ppInput }, authHeaders);
       const updatedAdmin = { ...adminData, profile_picture: res.data.admin.profile_picture };
-      localStorage.setItem('adminData', JSON.stringify(updatedAdmin));
+      setAdminData(updatedAdmin);
       setMyProfilePic(res.data.admin.profile_picture);
       toast.success('Profile picture updated!');
       setShowEditProfilePic(false);
@@ -481,7 +537,7 @@ const AdminDashboard = () => {
     setPpLoading(false);
   };
 
-  const handleLogout = () => { localStorage.removeItem('adminToken'); localStorage.removeItem('adminData'); navigate('/admin/login'); };
+  const handleLogout = async () => { await axios.post(`${API_BASE_URL}/auth/logout`).catch(() => {}); setAdminData(null); navigate('/admin/login'); };
 
   const tabs = [
     { key:'overview',     label:'Overview',        icon:<FaChartBar />,    count: null },
@@ -535,9 +591,12 @@ const AdminDashboard = () => {
     hostels: 'View accommodation currently listed on the platform.',
     kitchens: 'View food services currently listed on the platform.',
     messages: 'Read and respond to enquiries submitted through the website.',
-    admins: 'Manage staff accounts with access to this dashboard.',
-  };
+    admins: 'Manage staff accounts with access to this dashboard.' };
   const dateStr = new Date().toLocaleDateString('en-PK',{ weekday:'long', day:'numeric', month:'long', timeZone:'Asia/Karachi' });
+
+  if (!adminData) {
+    return <div className="min-h-screen flex items-center justify-center" style={{ background: ink.bg, color: ink.text }}>Loading dashboard...</div>;
+  }
 
   return (
     <div className="min-h-screen flex" style={{ background: ink.bg, color: ink.text, ...body }}>
@@ -564,8 +623,7 @@ const AdminDashboard = () => {
                 className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-left transition-colors duration-150 ${active ? '' : 'hover:bg-white/5'}`}
                 style={{
                   background: active ? ink.sideActive : undefined,
-                  color: active ? '#FFFFFF' : ink.sideText,
-                }}>
+                  color: active ? '#FFFFFF' : ink.sideText }}>
                 <span className="text-[15px] flex-shrink-0 w-5 text-center" style={{ color: active ? '#FFFFFF' : ink.sideFaint }}>{icon}</span>
                 <span className="text-[14.5px] font-semibold flex-1 truncate">{label}</span>
                 {count !== null && count > 0 && (
@@ -574,8 +632,7 @@ const AdminDashboard = () => {
                     style={{
                       ...body,
                       color: urgent ? '#3C3D37' : ink.sideText,
-                      background: urgent ? '#ECDFCC' : 'rgba(255,255,255,0.10)',
-                    }}>
+                      background: urgent ? '#ECDFCC' : 'rgba(255,255,255,0.10)' }}>
                     {count}
                   </span>
                 )}
@@ -602,7 +659,7 @@ const AdminDashboard = () => {
             <FaCamera className="text-[12px] flex-shrink-0" style={{ color: ink.sideFaint }}/>
             <span className="text-[13.5px] font-medium">Edit profile picture</span>
           </button>
-          <button onClick={() => { setShowChangePassword(true); setCpError(''); setCpSuccess(''); setCpForm({ currentPassword:'', newPassword:'', confirmPassword:'' }); }}
+          <button onClick={() => { setShowChangePassword(true); setCpError(''); setCpSuccess(''); setCpForm({ currentPassword:'', newPassword:'', confirmPassword:'' }); setCpNeedsVerification(false); setCpOtp(''); setCpVerified(false); }}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition hover:bg-white/5" style={{ color: ink.sideText }}>
             <FaLock className="text-[12px] flex-shrink-0" style={{ color: ink.sideFaint }}/>
             <span className="text-[13.5px] font-medium">Change password</span>
@@ -1119,17 +1176,42 @@ const AdminDashboard = () => {
       {showChangePassword && (
         <Modal onClose={()=>setShowChangePassword(false)} title="Change my password" icon={<FaLock style={{color:ink.brand, fontSize: 13}}/>}>
           <p className="text-[12px] mb-4" style={{ color: ink.faint }}>Logged in as <span style={{ color: ink.text, fontWeight: 600 }}>{adminData.email}</span></p>
-          <form onSubmit={handleChangePassword} className="space-y-3">
-            <FormField label="Current password" type="password" required value={cpForm.currentPassword} onChange={e=>setCpForm({...cpForm,currentPassword:e.target.value})} placeholder="Your current password"/>
-            <FormField label="New password" type="password" required value={cpForm.newPassword} onChange={e=>setCpForm({...cpForm,newPassword:e.target.value})} placeholder="Min. 6 characters"/>
-            <FormField label="Confirm new password" type="password" required value={cpForm.confirmPassword} onChange={e=>setCpForm({...cpForm,confirmPassword:e.target.value})} placeholder="Repeat new password"/>
-            {cpError && <div className="p-3 rounded-lg text-[12.5px]" style={{ background: '#8F3B28', color: '#FFFFFF' }}>{cpError}</div>}
-            {cpSuccess && <div className="p-3 rounded-lg text-[12.5px]" style={{ background: ink.brandDim, border: `1px solid ${ink.line}`, color: ink.brandDark }}>{cpSuccess}<p className="mt-1 opacity-70">Signing out in 3 seconds…</p></div>}
-            <div className="flex gap-3 pt-1">
-              <PrimaryBtn type="submit" disabled={cpLoading||!!cpSuccess}>{cpLoading?'Changing…':'Change password'}</PrimaryBtn>
-              <GhostBtn type="button" onClick={()=>setShowChangePassword(false)}>Cancel</GhostBtn>
+          {cpVerified ? (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg text-[12.5px]" style={{ background: ink.brandDim, border: `1px solid ${ink.line}`, color: ink.brandDark }}>
+                {cpSuccess}
+              </div>
+              <div className="flex">
+                <GhostBtn type="button" onClick={()=>setShowChangePassword(false)}>Done</GhostBtn>
+              </div>
             </div>
-          </form>
+          ) : cpNeedsVerification ? (
+            <form onSubmit={handleVerifySuperAdminEmail} className="space-y-3">
+              {cpSuccess && <div className="p-3 rounded-lg text-[12.5px]" style={{ background: ink.brandDim, border: `1px solid ${ink.line}`, color: ink.brandDark }}>{cpSuccess}</div>}
+              <p className="text-[12.5px]" style={{ color: ink.sub }}>
+                Your password has been changed. Enter the verification code sent to <strong>{adminData.email}</strong> to verify your email.
+              </p>
+              <FormField label="Verification code" type="text" required value={cpOtp} onChange={e=>setCpOtp(e.target.value)} placeholder="6-digit code"/>
+              {cpError && <div className="p-3 rounded-lg text-[12.5px]" style={{ background: '#8F3B28', color: '#FFFFFF' }}>{cpError}</div>}
+              <div className="flex gap-3 pt-1">
+                <PrimaryBtn type="submit" disabled={cpLoading}>{cpLoading?'Verifying…':'Verify email'}</PrimaryBtn>
+                <GhostBtn type="button" onClick={handleResendSuperAdminCode} disabled={cpLoading}>{cpLoading?'Sending…':'Resend code'}</GhostBtn>
+                <GhostBtn type="button" onClick={()=>setShowChangePassword(false)}>Later</GhostBtn>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <FormField label="Current password" type="password" required value={cpForm.currentPassword} onChange={e=>setCpForm({...cpForm,currentPassword:e.target.value})} placeholder="Your current password"/>
+              <FormField label="New password" type="password" required value={cpForm.newPassword} onChange={e=>setCpForm({...cpForm,newPassword:e.target.value})} placeholder="Min. 6 characters"/>
+              <FormField label="Confirm new password" type="password" required value={cpForm.confirmPassword} onChange={e=>setCpForm({...cpForm,confirmPassword:e.target.value})} placeholder="Repeat new password"/>
+              {cpError && <div className="p-3 rounded-lg text-[12.5px]" style={{ background: '#8F3B28', color: '#FFFFFF' }}>{cpError}</div>}
+              {cpSuccess && <div className="p-3 rounded-lg text-[12.5px]" style={{ background: ink.brandDim, border: `1px solid ${ink.line}`, color: ink.brandDark }}>{cpSuccess}<p className="mt-1 opacity-70">Signing out in 3 seconds…</p></div>}
+              <div className="flex gap-3 pt-1">
+                <PrimaryBtn type="submit" disabled={cpLoading||!!cpSuccess}>{cpLoading?'Changing…':'Change password'}</PrimaryBtn>
+                <GhostBtn type="button" onClick={()=>setShowChangePassword(false)}>Cancel</GhostBtn>
+              </div>
+            </form>
+          )}
         </Modal>
       )}
 

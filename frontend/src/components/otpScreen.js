@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../store/authSlice';
-import Cookies from 'js-cookie';
 import axios from 'axios';
 import API_BASE_URL from '../utils/api';
 
@@ -38,29 +37,18 @@ const OtpScreen = () => {
     }
 
     try {
-      const token = Cookies.get('token');
       const verified = sessionStorage.getItem('verified');
       if (verified) {
-        console.log("i am in otp screen");
-        const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, { otp }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        Cookies.set('token', response.data.token);
+        await axios.post(`${API_BASE_URL}/auth/verify-otp`, { otp });
         sessionStorage.removeItem('verified');
         navigate('/reset-password');
         return;
       }
       else{
-        const response = await axios.patch(`${API_BASE_URL}/auth/verifyEmail`, { otp }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        Cookies.set('token', response.data.token); // Set the real post-verification token
+        const response = await axios.patch(`${API_BASE_URL}/auth/verifyEmail`, { otp });
         sessionStorage.removeItem('verified');
         sessionStorage.setItem('user', JSON.stringify(response.data.user));
+        dispatch(setCredentials({ user: response.data.user }));
         if(response.status === 200){
           const role = response.data.user?.role;
           if (role === 'hostelOwner') {
@@ -83,12 +71,7 @@ const OtpScreen = () => {
     try {
       console.log("i am in resend otp");
 
-      const token = Cookies.get('token');
-      await axios.get(`${API_BASE_URL}/auth/resendOTP`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.get(`${API_BASE_URL}/auth/resendOTP`);
       setTimeLeft(300);
       setMessage('OTP resent successfully');
       setError('');

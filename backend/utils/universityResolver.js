@@ -434,6 +434,113 @@ const universityDatabase = {
   'govt college for women iqbal town': { name: 'Government College for Women Iqbal Town Lahore', lat: 31.474605, lng: 74.3562941 },
 };
 
+// Campus-specific records used by seeders. Every coordinate identifies one
+// named Lahore campus instead of a head office or an arbitrary city point.
+const seededUniversityDatabase = {
+  'university of the punjab (pu)': { name: 'University of the Punjab - Quaid-e-Azam Campus', lat: 31.4886984, lng: 74.2926335 },
+  'government college university (gcu)': { name: 'Government College University Lahore - Main Campus', lat: 31.5731518, lng: 74.3083536 },
+  'university of engineering & technology (uet)': { name: 'University of Engineering and Technology Lahore - Main Campus', lat: 31.5799, lng: 74.3561 },
+  'lahore university of management sciences (lums)': { name: 'Lahore University of Management Sciences - Main Campus', lat: 31.470326, lng: 74.4097439 },
+  'university of central punjab (ucp)': { name: 'University of Central Punjab - Main Campus', lat: 31.4472954, lng: 74.268077 },
+  'the university of lahore (uol)': { name: 'The University of Lahore - Defence Road Campus', lat: 31.39242, lng: 74.24311 },
+  'lahore college for women university (lcwu)': { name: 'Lahore College for Women University - Jail Road Campus', lat: 31.544955, lng: 74.3272202 },
+  'university of management & technology (umt)': { name: 'University of Management and Technology Lahore - Main Campus', lat: 31.4514449, lng: 74.2940846 },
+  'forman christian college (fccu)': { name: 'Forman Christian College - Main Campus', lat: 31.5214848, lng: 74.3338898 },
+  'hajvery university (hu)': { name: 'Hajvery University - Euro Campus', lat: 31.5042582, lng: 74.3582433 },
+  'superior university': { name: 'Superior University - Main Campus', lat: 31.3341385, lng: 74.2337292 },
+  'beaconhouse national university (bnu)': { name: 'Beaconhouse National University - Tarogil Campus', lat: 31.3648424, lng: 74.2160872 },
+  'information technology university (itu)': { name: 'Information Technology University - Arfa Software Technology Park', lat: 31.4760299, lng: 74.3427526 },
+  'minhaj university lahore': { name: 'Minhaj University Lahore - Main Campus', lat: 31.4479815, lng: 74.313169 },
+  'national college of arts (nca)': { name: 'National College of Arts Lahore - Main Campus', lat: 31.5682911, lng: 74.3072396 },
+  'lahore garrison university (lgu)': { name: 'Lahore Garrison University - DHA Phase VI Campus', lat: 31.4638355, lng: 74.4406649 },
+  'govt. shalimar graduate college': { name: 'Government Shalimar Graduate College - Baghbanpura Campus', lat: 31.58884, lng: 74.3788 },
+  'university of education lahore': { name: 'University of Education - Township Campus', lat: 31.4537211, lng: 74.2968249 },
+  'punjab tianjin university of technology (ptut)': { name: 'Punjab Tianjin University of Technology - Green Town Campus', lat: 31.4374, lng: 74.2964 },
+  'lahore leads university': { name: 'Lahore Leads University - Main Campus', lat: 31.5029986, lng: 74.326773 },
+  'fast-nuces lahore': { name: 'FAST-NUCES - Lahore Campus', lat: 31.4667, lng: 74.2641 },
+  'kinnaird college for women': { name: 'Kinnaird College for Women - Main Campus', lat: 31.5409, lng: 74.3206 },
+  'lahore school of economics': { name: 'Lahore School of Economics - Main Campus', lat: 31.5027922, lng: 74.4749169 },
+  'university of south asia': { name: 'University of South Asia - Lahore Campus', lat: 31.4257432, lng: 74.2313591 },
+  'green international university': { name: 'Green International University - Lahore Campus', lat: 31.397867, lng: 74.2293872 },
+  'sharif college of engineering and technology': { name: 'Sharif College of Engineering and Technology - Lahore Campus', lat: 31.3340152, lng: 74.1962989 },
+  'punjab university college of information technology': { name: 'Punjab University College of Information Technology - New Campus', lat: 31.4785966, lng: 74.2651695 },
+  'hailey college of banking and finance': { name: 'Hailey College of Banking and Finance - Main Campus', lat: 31.5617117, lng: 74.3074835 },
+  'allama iqbal medical college': { name: 'Allama Iqbal Medical College - Main Campus', lat: 31.4863829, lng: 74.3004581 },
+  'lahore medical and dental college': { name: 'Lahore Medical and Dental College - Main Campus', lat: 31.5816993, lng: 74.4637762 },
+  'akhtar saeed medical and dental college': { name: 'Akhtar Saeed Medical and Dental College - Lahore Campus', lat: 31.3717937, lng: 74.191135 },
+  'government college of technology lahore': { name: 'Government College of Technology - Railway Road Campus', lat: 31.5772632, lng: 74.3327319 },
+  'punjab law college': { name: 'Punjab Law College - Lahore Campus', lat: 31.5133816, lng: 74.31918 },
+  'jamia ashrafia lahore': { name: 'Jamia Ashrafia - Lahore Campus', lat: 31.5222587, lng: 74.3259718 },
+  'jamia naeemia lahore': { name: 'Jamia Naeemia - Lahore Campus', lat: 31.5907252, lng: 74.3671433 },
+  'minhaj-ul-quran international': { name: 'Minhaj-ul-Quran International - Lahore Campus', lat: 31.4833429, lng: 74.3090304 },
+  'dyal singh college lahore': { name: 'Government Dyal Singh Graduate College - Lahore Campus', lat: 31.5688982, lng: 74.3254456 },
+  'mao college lahore': { name: 'Government MAO Graduate College - Lahore Campus', lat: 31.5625191, lng: 74.3029137 },
+  'islamia college railway road': { name: 'Government Islamia Graduate College - Railway Road Campus', lat: 31.5747463, lng: 74.3254655 },
+  'aitchison college lahore': { name: 'Aitchison College - Main Campus', lat: 31.5502455, lng: 74.3456212 },
+  'queen mary college lahore': { name: 'Queen Mary College - Main Campus', lat: 31.5632838, lng: 74.3407695 },
+  'university of home economics lahore': { name: 'University of Home Economics - Main Campus', lat: 31.5252123, lng: 74.3522823 },
+  'azam garrison school and college': { name: 'Azam Garrison School and College - Main Campus', lat: 31.5345238, lng: 74.3814272 },
+};
+
+// Safe aliases are explicit. They must never be resolved with substring
+// matching because short forms such as PU can occur inside unrelated names.
+Object.assign(seededUniversityDatabase, {
+  pu: seededUniversityDatabase['university of the punjab (pu)'],
+  'university of the punjab': seededUniversityDatabase['university of the punjab (pu)'],
+  'punjab university': seededUniversityDatabase['university of the punjab (pu)'],
+  gcu: seededUniversityDatabase['government college university (gcu)'],
+  gcul: seededUniversityDatabase['government college university (gcu)'],
+  'government college university': seededUniversityDatabase['government college university (gcu)'],
+  'government college university lahore': seededUniversityDatabase['government college university (gcu)'],
+  uet: seededUniversityDatabase['university of engineering & technology (uet)'],
+  'university of engineering and technology lahore': seededUniversityDatabase['university of engineering & technology (uet)'],
+  lums: seededUniversityDatabase['lahore university of management sciences (lums)'],
+  'lahore university of management sciences': seededUniversityDatabase['lahore university of management sciences (lums)'],
+  ucp: seededUniversityDatabase['university of central punjab (ucp)'],
+  'university of central punjab': seededUniversityDatabase['university of central punjab (ucp)'],
+  uol: seededUniversityDatabase['the university of lahore (uol)'],
+  'the university of lahore': seededUniversityDatabase['the university of lahore (uol)'],
+  'university of lahore': seededUniversityDatabase['the university of lahore (uol)'],
+  lcwu: seededUniversityDatabase['lahore college for women university (lcwu)'],
+  'lahore college for women university': seededUniversityDatabase['lahore college for women university (lcwu)'],
+  umt: seededUniversityDatabase['university of management & technology (umt)'],
+  'university of management and technology': seededUniversityDatabase['university of management & technology (umt)'],
+  fccu: seededUniversityDatabase['forman christian college (fccu)'],
+  'forman christian college': seededUniversityDatabase['forman christian college (fccu)'],
+  hu: seededUniversityDatabase['hajvery university (hu)'],
+  'hajvery university': seededUniversityDatabase['hajvery university (hu)'],
+  bnu: seededUniversityDatabase['beaconhouse national university (bnu)'],
+  'beaconhouse national university': seededUniversityDatabase['beaconhouse national university (bnu)'],
+  itu: seededUniversityDatabase['information technology university (itu)'],
+  'information technology university': seededUniversityDatabase['information technology university (itu)'],
+  nca: seededUniversityDatabase['national college of arts (nca)'],
+  'national college of arts': seededUniversityDatabase['national college of arts (nca)'],
+  lgu: seededUniversityDatabase['lahore garrison university (lgu)'],
+  'lahore garrison university': seededUniversityDatabase['lahore garrison university (lgu)'],
+  ptut: seededUniversityDatabase['punjab tianjin university of technology (ptut)'],
+  'punjab tianjin university of technology': seededUniversityDatabase['punjab tianjin university of technology (ptut)'],
+  fast: seededUniversityDatabase['fast-nuces lahore'],
+  nuces: seededUniversityDatabase['fast-nuces lahore'],
+  'fast lahore': seededUniversityDatabase['fast-nuces lahore'],
+  kinnaird: seededUniversityDatabase['kinnaird college for women'],
+  lse: seededUniversityDatabase['lahore school of economics'],
+  pucit: seededUniversityDatabase['punjab university college of information technology'],
+  hcbf: seededUniversityDatabase['hailey college of banking and finance'],
+  aimc: seededUniversityDatabase['allama iqbal medical college'],
+  lmdc: seededUniversityDatabase['lahore medical and dental college'],
+  asmc: seededUniversityDatabase['akhtar saeed medical and dental college'],
+  'gct lahore': seededUniversityDatabase['government college of technology lahore'],
+  'plc lahore': seededUniversityDatabase['punjab law college'],
+  mqi: seededUniversityDatabase['minhaj-ul-quran international'],
+  'dyal singh college': seededUniversityDatabase['dyal singh college lahore'],
+  'mao college': seededUniversityDatabase['mao college lahore'],
+  'aitchison college': seededUniversityDatabase['aitchison college lahore'],
+  'queen mary college': seededUniversityDatabase['queen mary college lahore'],
+  'university of home economics': seededUniversityDatabase['university of home economics lahore'],
+  'azam garrison college': seededUniversityDatabase['azam garrison school and college'],
+  'government shalimar graduate college': seededUniversityDatabase['govt. shalimar graduate college'],
+});
+
 /**
  * Try to resolve a university name/abbreviation to full name and coordinates.
  * Checks database first, then falls back to provided full name.
@@ -445,22 +552,17 @@ function resolveUniversityFromKnown(universityInput) {
 
   const key = universityInput.trim().toLowerCase();
 
-  // Direct lookup
-  if (universityDatabase[key]) {
-    return universityDatabase[key];
+  if (seededUniversityDatabase[key]) {
+    return seededUniversityDatabase[key];
   }
 
-  // Fuzzy match: check if input contains or is contained within a known key
-  for (const [knownKey, data] of Object.entries(universityDatabase)) {
-    if (key.includes(knownKey) || knownKey.includes(key)) {
-      return data;
-    }
-  }
-
+  // Unknown names deliberately fall through to live geocoding. Substring
+  // matching can silently map one institution to another.
   return null;
 }
 
 module.exports = {
   resolveUniversityFromKnown,
   universityDatabase,
+  seededUniversityDatabase,
 };

@@ -10,8 +10,7 @@ export function AddOrUpdateItemModal({ action, payload, handleClose }) {
   const {
     handleChange,
     handleImageUrlChange,
-    handleSubmit,
-  } = handlers;
+    handleSubmit } = handlers;
  console.log(action);
   // Ensure initial values come from itemDetails (existing data or empty string/false)
   return (

@@ -37,8 +37,7 @@ const HostelList = () => {
   const [filters, setFilters] = useState({
     university: '',
     facilities: [],   // multi-select array
-    maxDistance: '',
-  });
+    maxDistance: '' });
   const [filteredHostels, setFilteredHostels] = useState([]);
   const [searchedUniversity, setSearchedUniversity] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -159,16 +158,14 @@ const HostelList = () => {
         ...prev,
         facilities: exists
           ? prev.facilities.filter((f) => f !== facility)
-          : [...prev.facilities, facility],
-      };
+          : [...prev.facilities, facility] };
     });
   };
 
   const toggleAllFacilities = () => {
     setFilters((prev) => ({
       ...prev,
-      facilities: prev.facilities.length === ALL_FACILITIES.length ? [] : [...ALL_FACILITIES],
-    }));
+      facilities: prev.facilities.length === ALL_FACILITIES.length ? [] : [...ALL_FACILITIES] }));
   };
 
   const handleSearch = () => {

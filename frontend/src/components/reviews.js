@@ -17,8 +17,7 @@ const reviewsData = [
     review:
       "Booking my hostel near the university from home was such a relief! The process was smooth, and the hostel is even better than I expected. It’s cozy, secure, and super close to campus. It’s been a great experience so far!",
     rating: 4.5,
-    date: "2023-09-10",
-  },
+    date: "2023-09-10" },
   {
     id: 2,
     name: "Jane Smith",
@@ -27,8 +26,7 @@ const reviewsData = [
     review:
       "As an out-of-city student, I was worried about finding the right accommodation, but this hostel facility made everything easy. The staff is supportive, and the amenities are fantastic. I can focus on my studies without any distractions.",
     rating: 5,
-    date: "2023-09-05",
-  },
+    date: "2023-09-05" },
   {
     id: 3,
     name: "Alice Johnson",
@@ -37,8 +35,7 @@ const reviewsData = [
     review:
       "The hostel environment is so peaceful and well-maintained. The convenience of being close to the university makes a big difference. I feel safe, and I’ve made some great friends here too.",
     rating: 4,
-    date: "2023-09-01",
-  },
+    date: "2023-09-01" },
   {
     id: 4,
     name: "Michael Brown",
@@ -47,8 +44,7 @@ const reviewsData = [
     review:
       "The homemade food service is a lifesaver! I don’t have to worry about cooking or finding healthy meals. The food is always fresh, tasty, and delivered on time. It’s the perfect solution for students like me with busy schedules.",
     rating: 4.8,
-    date: "2023-08-28",
-  },
+    date: "2023-08-28" },
   {
     id: 5,
     name: "Emma Wilson",
@@ -57,8 +53,7 @@ const reviewsData = [
     review:
       "The homemade food service is one of the best parts of staying here. The meals are delicious and remind me of home. It’s great to know I’m eating healthy, even on the busiest days. I highly recommend it!",
     rating: 5,
-    date: "2023-08-22",
-  },
+    date: "2023-08-22" },
   {
     id: 6,
     name: "Chris Green",
@@ -67,8 +62,7 @@ const reviewsData = [
     review:
       "The homemade food delivery is incredibly convenient and affordable. The meals are well-balanced, and the variety keeps things interesting. It’s such a relief not to worry about cooking while managing my studies!",
     rating: 4.2,
-    date: "2023-08-15",
-  },
+    date: "2023-08-15" },
 ];
 
 const Reviews = () => {
@@ -106,14 +100,12 @@ const Reviews = () => {
           loop={true}
           navigation={{
             nextEl: ".swiper-button-next",
-            prevEl: ".swiper-button-prev",
-          }}
+            prevEl: ".swiper-button-prev" }}
           modules={[Navigation]} // Use the Navigation module
           breakpoints={{
             320: { slidesPerView: 1 },
             768: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
-          }}
+            1024: { slidesPerView: 3 } }}
           className="w-full max-w-5xl"
         >
           {allReviews.map((review) => (

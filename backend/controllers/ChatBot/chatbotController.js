@@ -4,6 +4,31 @@ const RoomBed = require('../../models/hostelowner/RoomBed');
 const KitchenOwner = require('../../models/kitchenowner/Kitchenowner');
 const Dish = require('../../models/kitchenowner/Dish');
 const Review = require('../../models/student/Review');
+const logger = require('../../utils/logger');
+
+// Short-lived, bounded cache for public chatbot answers. Dynamic listings are
+// expensive aggregate/query combinations, but do not need to be recomputed for
+// every identical message in the same minute.
+const responseCache = new Map();
+const CACHE_TTL_MS = 60 * 1000;
+const CACHE_MAX_ENTRIES = 200;
+
+function getCachedReply(key) {
+    const entry = responseCache.get(key);
+    if (!entry || entry.expiresAt <= Date.now()) {
+        responseCache.delete(key);
+        return null;
+    }
+    return entry.reply;
+}
+
+function cacheReply(key, reply) {
+    if (responseCache.size >= CACHE_MAX_ENTRIES) {
+        const oldestKey = responseCache.keys().next().value;
+        responseCache.delete(oldestKey);
+    }
+    responseCache.set(key, { reply, expiresAt: Date.now() + CACHE_TTL_MS });
+}
 
 // ─── Ratings Helper ─────────────────────────────────────────────────────────
 // Pulls real average ratings from the Review collection for a batch of
@@ -138,6 +163,11 @@ function detectIntent(msg) {
 
 // ─── Static Responses ──────────────────────────────────────────────────────────
 function greetingResponse() {
+    return `Walaikum Assalam! I’m your SFS helper. 😊
+
+I can help you find a *hostel*, check *available beds*, browse *food*, compare *prices*, or explain *bookings*.
+
+What are you looking for today?`;
     return `Assalam-o-Alaikum! Welcome to Student Facility System (SFS).
 
 I'm the SFS assistant. Here's what I can help you with:
@@ -151,12 +181,22 @@ What would you like to know?`;
 }
 
 function smallTalkResponse() {
+    return `I’m doing well—thanks for asking! I’m here to make SFS easier: hostels, beds, food, prices, bookings, and account help.
+
+What would you like to do?`;
     return `I'm doing well, thanks for asking! I'm the SFS assistant — a bot built for the Student Facility System, here to help with hostel bookings, food orders, pricing, and account questions.
 
 What can I help you with?`;
 }
 
 function contactResponse() {
+    return `*Need support?*
+
+Email: aqibawan0102@gmail.com
+Phone: +92-310-4693600
+Hours: Monday–Saturday, 9 AM–6 PM PKT
+
+Tell us what happened and we’ll help.`;
     return `*Contact & Support*
 
 Developer: Muhammad Sami
@@ -168,6 +208,15 @@ Support hours: Monday – Saturday, 9 AM – 6 PM PKT`;
 }
 
 function howToResponse() {
+    return `*Using SFS is simple:*
+
+*Students:* register, browse hostels or food, pay securely, then track bookings and orders from Profile.
+
+*Hostel owners:* register, wait for approval, add rooms/beds, then respond to booking requests.
+
+*Kitchen owners:* register, wait for approval, add dishes, then manage incoming orders.
+
+Want help with a specific step?`;
     return `*How to Use SFS*
 
 For Students:
@@ -191,6 +240,11 @@ For Kitchen Owners:
 }
 
 function paymentResponse() {
+    return `*Payments*
+
+You can currently pay by credit or debit card through *Stripe*. Prices are shown in PKR, and SFS never stores your card details.
+
+JazzCash and EasyPaisa are planned for a future update.`;
     return `*Payment Options*
 
 Stripe (active):
@@ -203,11 +257,17 @@ EasyPaisa — coming soon`;
 }
 
 function farewellResponse() {
+    return `You’re welcome! Have a great day. If you need anything later, just open this chat. 😊`;
     return `Thanks for using SFS. If you need anything else, I'm here.
 Email: mscodes148@gmail.com | Phone: +92-318-4183886`;
 }
 
 function facilitiesResponse() {
+    return `*Popular hostel facilities*
+
+Wi-Fi, AC, CCTV, generator, laundry, parking, water cooler, and study rooms are commonly listed.
+
+Open a hostel’s details to see its exact facilities.`;
     return `*Common Hostel Facilities on SFS*
 
 - Wi-Fi (high-speed internet)
@@ -223,6 +283,11 @@ Each hostel lists its own available facilities on the *Hostels* page — check a
 }
 
 function bookingStatusResponse() {
+    return `*Checking your bookings*
+
+Log in, then open *Profile → My Bookings*. Food orders are under *Profile → My Orders*.
+
+You’ll see the latest status and details there.`;
     return `*Your Bookings*
 
 To view your current bookings:
@@ -236,6 +301,13 @@ Need help? Contact: +92-318-4183886`;
 }
 
 function cancelResponse() {
+    return `*To cancel a hostel booking:*
+
+1. Open *Profile → My Bookings*
+2. Select the booking
+3. Choose *Cancel Booking*
+
+If payment was completed, SFS requests the Stripe refund before finalising cancellation.`;
     return `*Cancellation Policy*
 
 To cancel a hostel booking:
@@ -249,6 +321,15 @@ Support: mscodes148@gmail.com`;
 }
 
 function unknownResponse(userMessage) {
+    return `I’m not fully sure what you mean by “${userMessage}”.
+
+Try asking:
+• *Find a hostel near UET*
+• *Are any beds available?*
+• *Show budget food*
+• *How do I cancel a booking?*
+
+You can write naturally—I’ll do my best to help.`;
     return `I didn't quite understand: "${userMessage}"
 
 Here's what I can help with:
@@ -270,7 +351,15 @@ exports.handleMessage = async (req, res) => {
         return res.status(400).json({ reply: 'Please send a message.' });
     }
 
+    const cacheKey = userMessage.toLowerCase().replace(/\s+/g, ' ');
+    const cachedReply = getCachedReply(cacheKey);
+    if (cachedReply) return res.json({ reply: cachedReply, cached: true });
+
     const intent = detectIntent(userMessage);
+    const sendReply = (reply) => {
+        cacheReply(cacheKey, reply);
+        return res.json({ reply });
+    };
 
     try {
         let reply = '';
@@ -567,10 +656,10 @@ exports.handleMessage = async (req, res) => {
                 reply = unknownResponse(userMessage);
         }
 
-        return res.json({ reply });
+        return sendReply(reply);
 
     } catch (error) {
-        console.error('Chatbot error:', error);
+        logger.error('Chatbot error:', error);
         return res.json({
             reply: `I'm having trouble fetching live data right now.\n\nFor immediate help:\nEmail: mscodes148@gmail.com\nPhone: +92-318-4183886`
         });

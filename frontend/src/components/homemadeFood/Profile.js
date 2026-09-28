@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import ImageUploadField from '../common/ImageUploadField';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaMapMarkerAlt, FaUtensils } from 'react-icons/fa';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -12,7 +11,6 @@ const KitchenOwnerProfile = () => {
   const [editPicture, setEditPicture] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [showProfilePicture, setShowProfilePicture] = useState(false);
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
@@ -22,7 +20,7 @@ const KitchenOwnerProfile = () => {
   }, []);
 
   if (!user) {
-    return <div>No user data available</div>;
+    return <div className='text-white text-center'>No user data available</div>;
   }
 
   const startEdit = () => {
@@ -36,11 +34,11 @@ const KitchenOwnerProfile = () => {
     setSaving(true);
     setError('');
     try {
-      const token = Cookies.get('token');
+
       const res = await axios.put(
         `${API_BASE_URL}/profile/User`,
         { kitchen_picture: editPicture },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { } }
       );
       const updatedUser = { ...user, kitchen_picture: res.data.kitchen_picture };
       setUser(updatedUser);
@@ -54,28 +52,66 @@ const KitchenOwnerProfile = () => {
   };
 
   return (
-    <div className=' text-white'>
-    <div className='flex flex-col justify-center items-center'>
-    <p className="text-2xl font-bold text-center text-white mt-4"> {user.kitchen_name} Dashboard </p>
-      <button
-        type='button'
-        onClick={() => user.profile_picture && setShowProfilePicture(true)}
-        className='mb-4 flex h-24 w-24 overflow-hidden rounded-full border-4 border-[#697565] bg-gray-700'
-        aria-label='View profile picture'
-      >
-        {user.profile_picture ? <img className='h-full w-full object-cover' src={user.profile_picture} alt='Owner profile' /> : <span className='m-auto text-gray-300'>No photo</span>}
-      </button>
-      <img className='w-full h-[500px]' src={user.kitchen_picture} alt={user.kitchen_name} />
-      {!editMode && (
-        <button
-          onClick={startEdit}
-          className='mt-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center gap-2'
-        >
-          <FaEdit /> Change Picture
-        </button>
-      )}
+    <section className='w-full'>
+      <div className='relative min-h-[480px] overflow-hidden rounded-2xl border border-white/10 bg-[#25292e] shadow-2xl sm:min-h-[500px]'>
+        <img
+          className='absolute inset-0 h-full w-full object-cover'
+          src={user.kitchen_picture}
+          alt={user.kitchen_name || 'Kitchen'}
+        />
+        <div className='absolute inset-0 bg-black/15' />
+        <div className='absolute inset-y-0 left-0 w-full bg-gradient-to-r from-black/85 via-black/70 to-transparent sm:w-[64%] lg:w-[56%]' />
+
+        <div className='absolute inset-y-0 left-0 flex w-full max-w-3xl flex-col justify-end p-6 text-white sm:w-[64%] sm:p-10 lg:w-[56%] lg:p-12'>
+          <div className='border-l-2 border-[#ECDFCC] pl-5 sm:pl-6'>
+            <div className='mb-5 flex items-center gap-3'>
+              <span className='inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#ECDFCC]/50 bg-[#ECDFCC]/15 text-[#ECDFCC]'>
+                <FaUtensils aria-hidden='true' />
+              </span>
+              <p className='text-[11px] font-bold uppercase tracking-[0.28em] text-[#ECDFCC]'>
+                Kitchen owner profile
+              </p>
+            </div>
+
+            <h2 className='max-w-xl text-4xl font-bold leading-[0.95] tracking-tight drop-shadow-lg sm:text-5xl lg:text-6xl'>
+              {user.kitchen_name}
+            </h2>
+
+            <div className='my-5 h-px w-20 bg-[#ECDFCC]/80' />
+
+            {user.address && (
+              <p className='flex items-start gap-3 text-sm font-semibold leading-6 text-white/95 sm:text-base'>
+                <FaMapMarkerAlt className='mt-1 shrink-0 text-[#ECDFCC]' aria-hidden='true' />
+                <span>{user.address}</span>
+              </p>
+            )}
+
+            {user.kitchen_description && (
+              <p className='mt-4 max-w-lg text-sm leading-7 text-white/85 sm:text-base'>
+                {user.kitchen_description}
+              </p>
+            )}
+
+            <p className='mt-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55'>
+              Homemade food · Kitchen information
+            </p>
+          </div>
+
+          {!editMode && (
+            <button
+              onClick={startEdit}
+              className='mt-6 w-fit rounded-lg border border-white/15 bg-[#697565] px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#3C3D37] focus:outline-none focus:ring-2 focus:ring-[#ECDFCC]'
+            >
+              <span className='flex items-center gap-2'>
+                <FaEdit /> Change Picture
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {editMode && (
-        <form onSubmit={handleSave} className='mt-4 w-full max-w-md bg-[#25292e] rounded-xl p-4'>
+        <form onSubmit={handleSave} className='mt-4 rounded-xl bg-[#25292e] p-4'>
           <ImageUploadField
             label="Kitchen Picture"
             name="kitchenPicture"
@@ -83,33 +119,18 @@ const KitchenOwnerProfile = () => {
             onChange={setEditPicture}
             uploadType="kitchen"
           />
-          {error && <div className='text-red-500 text-sm mb-2'>{error}</div>}
+          {error && <div className='mb-2 text-sm text-red-500'>{error}</div>}
           <div className='flex gap-3'>
-            <button type='submit' disabled={saving} className='bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2 rounded'>
+            <button type='submit' disabled={saving} className='rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-60'>
               {saving ? 'Saving...' : 'Save'}
             </button>
-            <button type='button' onClick={() => setEditMode(false)} className='bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded'>
+            <button type='button' onClick={() => setEditMode(false)} className='rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700'>
               Cancel
             </button>
           </div>
         </form>
       )}
-      <div className='p-4 justify-center'>
-
-        <h2 className='text-xl font-bold'>{user.kitchen_name}</h2>
-        <p className='text-lg font-semibold'>{user.address}</p>
-        <p className=''>Description:{user.kitchen_description}</p>
-      </div>
-      {showProfilePicture && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4' onClick={() => setShowProfilePicture(false)}>
-          <div className='relative max-w-3xl max-h-[90vh]' onClick={(e) => e.stopPropagation()}>
-            <button type='button' onClick={() => setShowProfilePicture(false)} className='absolute -top-10 right-0 text-2xl text-white' aria-label='Close profile picture'>&times;</button>
-            <img src={user.profile_picture} alt='Owner profile' className='max-h-[85vh] max-w-full rounded-lg object-contain' />
-          </div>
-        </div>
-      )}
-    </div>
-    </div>
+    </section>
   );
 };
 

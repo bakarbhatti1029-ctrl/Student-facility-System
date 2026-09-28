@@ -34,6 +34,7 @@ import HostelOwnerBookingBed from './components/hostelBooking/HostelOwnerbooking
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
 import NotFound from './screens/NotFound';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -85,32 +86,32 @@ function App() {
         <Route path='/loginform' element={<LoginForm/>}/>
         <Route path='/logout' element={<Logout/>}/>
         <Route path="/hostels/:id" element={<HostelDetail/>} />
-        <Route path="/booked-room" element={<BookedRoom/>} />
-        <Route path="/food/checkout" element={<CheckoutFood/>} />
-        <Route path="/hostel/checkout" element={<Checkout/>} />
-        <Route path="/cart" element={<Cart/>} />
-        <Route path="/orders" element={<OrderPage />} />
+        <Route path="/booked-room" element={<ProtectedRoute allowedRoles={['student']}><BookedRoom/></ProtectedRoute>} />
+        <Route path="/food/checkout" element={<ProtectedRoute allowedRoles={['student']}><CheckoutFood/></ProtectedRoute>} />
+        <Route path="/hostel/checkout" element={<ProtectedRoute allowedRoles={['student']}><Checkout/></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute allowedRoles={['student']}><Cart/></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute allowedRoles={['student']}><OrderPage /></ProtectedRoute>} />
         <Route path="/kitchen/:id" element={<KitchenDetail/>} />
         <Route path="/kitchens" element={<Kitchens/>} />
-        <Route path="/hostel-owner-profile/totalroom" element={<TotalRoom/>} />
-        <Route path="/kitchen-owner-profile/dishes" element={<Dishes/>} />
+        <Route path="/hostel-owner-profile/totalroom" element={<ProtectedRoute allowedRoles={['hostelOwner']}><TotalRoom/></ProtectedRoute>} />
+        <Route path="/kitchen-owner-profile/dishes" element={<ProtectedRoute allowedRoles={['kitchenOwner']}><Dishes/></ProtectedRoute>} />
         <Route path="/confirmation" element={<Confirmation/>} />
-        <Route path="/hostel-owner-profile" element={<HostelOwnerProfile/>}/>
-        <Route path="/kitchen-owner-profile" element={<KitchenOwnerProfile/>} />
-        <Route path="/kitchen-owner/orders" element={<KitchenOwnerOrders/>} />
-       <Route path='/hostelownerdashboard' element={<HostelOwnerDashboard/>}/>
+        <Route path="/hostel-owner-profile" element={<ProtectedRoute allowedRoles={['hostelOwner']}><HostelOwnerProfile/></ProtectedRoute>}/>
+        <Route path="/kitchen-owner-profile" element={<ProtectedRoute allowedRoles={['kitchenOwner']}><KitchenOwnerProfile/></ProtectedRoute>} />
+        <Route path="/kitchen-owner/orders" element={<ProtectedRoute allowedRoles={['kitchenOwner']}><KitchenOwnerOrders/></ProtectedRoute>} />
+       <Route path='/hostelownerdashboard' element={<ProtectedRoute allowedRoles={['hostelOwner']}><HostelOwnerDashboard/></ProtectedRoute>}/>
        <Route path='/Mission' element={<Mission/>}/>
        <Route path='/about-us' element={<AboutUs/>}/>
        <Route path='/AboutUs' element={<Navigate to="/about-us" replace />}/>
-       <Route path='/profile' element={<StudentProfile/>}/>
-       <Route path='/booking' element={<HostelOwnerBookingBed/>}/>
+       <Route path='/profile' element={<ProtectedRoute allowedRoles={['student', 'hostelOwner', 'kitchenOwner']}><StudentProfile/></ProtectedRoute>}/>
+       <Route path='/booking' element={<ProtectedRoute allowedRoles={['hostelOwner']}><HostelOwnerBookingBed/></ProtectedRoute>}/>
        <Route path='/contact-us' element={<ContactUs/>}/>
        <Route path='/ContactUs' element={<Navigate to="/contact-us" replace />}/>
-       <Route path='/kitchenownerdashboard' element={<KitchenOwnerDashboard/>}/>
+       <Route path='/kitchenownerdashboard' element={<ProtectedRoute allowedRoles={['kitchenOwner']}><KitchenOwnerDashboard/></ProtectedRoute>}/>
 
        {/* Admin Routes */}
        <Route path='/admin/login' element={<AdminLogin/>}/>
-       <Route path='/admin/dashboard' element={<AdminDashboard/>}/>
+       <Route path='/admin/dashboard' element={<ProtectedRoute allowedRoles={['admin', 'super_admin']}><AdminDashboard/></ProtectedRoute>}/>
 
        {/* Catch-all: any unmatched URL */}
        <Route path='*' element={<NotFound/>}/>

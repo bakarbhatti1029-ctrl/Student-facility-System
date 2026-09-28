@@ -1,17 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import API_BASE_URL from '../utils/api';
 
 // Example thunk for processing payment
 export const processPayment = createAsyncThunk('payments/processPayment', async (paymentData, { rejectWithValue }) => {
   console.log("paymentData",paymentData);
-  const token = Cookies.get('token');
+
   try {
     const response = await axios.post(`${API_BASE_URL}/api/bookings/book/${paymentData.hostelOwnerId}/${paymentData.roomId}/${paymentData.bed.bed_number}`, paymentData, {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        }
     });
     return response.data;
   } catch (error) {
@@ -30,8 +28,7 @@ const paymentSlice = createSlice({
   initialState: {
     loading: false,
     error: null,
-    success: false,
-  },
+    success: false },
   reducers: {},
   extraReducers: (builder) => {
     builder

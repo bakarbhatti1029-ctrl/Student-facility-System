@@ -5,6 +5,7 @@ const sendEmail = require('../../utils/emailService');
 const bcrypt = require('bcryptjs');
 const getLatLngFromAddress = require('../../utils/geocodingService');
 const logger = require('../../utils/logger');
+const { setSessionCookie, setCsrfCookie } = require('../../utils/sessionCookie');
 const { resolveUniversityFromKnown } = require('../../utils/universityResolver');
 const KnownInstitute = require('../../models/KnownInstitute');
 
@@ -178,7 +179,7 @@ exports.signUpUser = async (req, res, next) => {
             logger.debug(`Geocoded hostel: ${hostelLatLng.lat}, ${hostelLatLng.lng}`);
           }
         } catch (geoError) {
-          console.error('Error geocoding hostel address:', geoError);
+          logger.error('Error geocoding hostel address:', geoError);
         }
       }
 
@@ -269,7 +270,7 @@ Thank you for registering with Student Facility System!`;
       await sendEmail(email, emailSubject, emailText);
       logger.debug('Verification email sent successfully to:', email);
     } catch (emailError) {
-      console.error('Error sending verification email:', emailError);
+      logger.error('Error sending verification email:', emailError);
 
       // Delete pending registration if email fails and REQUIRE_EMAIL_SUCCESS is true
       if (process.env.REQUIRE_EMAIL_SUCCESS === 'true') {
@@ -284,15 +285,16 @@ Thank you for registering with Student Facility System!`;
     // Create temporary JWT token (used only for verification endpoint)
     const payload = { email, role, isPending: true };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+    setSessionCookie(res, token);
+    setCsrfCookie(res);
 
     logger.debug('Pending registration created for:', email);
     res.status(201).json({
       message: `Registration initiated. Please check your email for the OTP to complete your ${role} registration.`,
-      token,
       requiresVerification: true
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('Registration error:', error);
     res.status(500).json({
       message: "Registration failed. Please try again.",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined

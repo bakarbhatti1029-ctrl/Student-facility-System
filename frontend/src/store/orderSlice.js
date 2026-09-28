@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import API_BASE_URL from '../utils/api';
 
 // Async action to fetch orders for a specific customer
@@ -8,10 +7,9 @@ export const getOrdersForCustomer = createAsyncThunk(
   'orders/getOrdersForCustomer',
   async (_, { rejectWithValue }) => {
     try {
-      const token = Cookies.get('token');
+
       const response = await axios.get(`${API_BASE_URL}/api/order/customer`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -24,16 +22,14 @@ export const getOrdersForKitchen = createAsyncThunk(
   'orders/getOrdersForKitchen',
   async (_, { rejectWithValue }) => {
     try {
-      const token = Cookies.get('token');
+
       const response = await axios.get(`${API_BASE_URL}/api/order/kitchen`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
       return response.data;
     } catch (error) {
       return rejectWithValue({
         message: error.response?.data?.message || error.message,
-        status: error.response?.status,
-      });
+        status: error.response?.status });
     }
   }
 );
@@ -43,13 +39,12 @@ export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
   async ({ orderId, status }, { rejectWithValue }) => {
     try {
-      const token = Cookies.get('token');
+
       const response = await axios.patch(
         `${API_BASE_URL}/api/order/update/${orderId}`,
         { status },
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: { } }
       );
       return { orderId, status };
     } catch (error) {
@@ -63,10 +58,9 @@ export const removeOrder = createAsyncThunk(
   'orders/removeOrder',
   async (orderId, { rejectWithValue }) => {
     try {
-      const token = Cookies.get('token');
+
       await axios.delete(`${API_BASE_URL}/api/order/delete/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
       return orderId;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -80,8 +74,7 @@ const ordersSlice = createSlice({
     orders: [],
     loading: false,
     error: null,
-    chartData: [],
-  },
+    chartData: [] },
   reducers: {
     clearOrders: (state) => {
       state.orders = [];
@@ -109,8 +102,7 @@ const ordersSlice = createSlice({
       } else {
         state.chartData.push({ month, orderCount: 1 });
       }
-    },
-  },
+    } },
   extraReducers: (builder) => {
     builder
       // Fetch orders for customer
@@ -148,8 +140,7 @@ const ordersSlice = createSlice({
       .addCase(removeOrder.fulfilled, (state, action) => {
         state.orders = state.orders.filter(order => order._id !== action.payload);
       });
-  },
-});
+  } });
 
 export const { clearOrders, addNewOrder, updateOrderInState,addOrderToChart} = ordersSlice.actions;
 export default ordersSlice.reducer;

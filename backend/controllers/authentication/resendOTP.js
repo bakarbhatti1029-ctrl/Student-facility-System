@@ -55,7 +55,7 @@ Thank you for registering with Student Facility System!`;
                 message: "OTP resent successfully. Please check your email."
             });
         } catch (emailError) {
-            console.error('Failed to resend OTP:', emailError);
+            logger.error('Failed to resend OTP:', emailError);
 
             return res.status(500).json({
                 success: false,
@@ -64,7 +64,7 @@ Thank you for registering with Student Facility System!`;
             });
         }
     } catch (error) {
-        console.error('Error in resendOTP:', error);
+        logger.error('Error in resendOTP:', error);
         return res.status(500).json({
             success: false,
             message: "An error occurred while resending OTP",

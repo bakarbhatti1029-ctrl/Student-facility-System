@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Chat = require('../models/chat/chatModel');
 const Order = require('../models/student/Order');
 const logger = require('../utils/logger');
+const { parseCookies } = require('../utils/sessionCookie');
 
 const connectSocket = (server) => {
   const io = socketIo(server, {
@@ -12,18 +13,14 @@ const connectSocket = (server) => {
         : ['http://localhost:3000'],
       methods: ["GET", "POST"],
       credentials: true,
-      allowedHeaders: ["Content-Type", "Authorization"]
+      allowedHeaders: ["Content-Type"]
     }
   });
 
-  // Every connection must present a valid JWT (same one used for REST auth) —
-  // without this, anyone could connect anonymously and join/read/write any
-  // order's chat or notification room.
+  // Socket.IO authenticates from the same HttpOnly session cookie as REST.
   io.use((socket, next) => {
     try {
-      const token =
-        socket.handshake.auth?.token ||
-        socket.handshake.headers?.authorization?.split(' ')[1];
+      const token = parseCookies(socket.handshake.headers.cookie || '').sfs_session;
       if (!token) {
         return next(new Error('Authentication required'));
       }

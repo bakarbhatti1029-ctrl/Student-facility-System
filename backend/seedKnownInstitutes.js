@@ -1,32 +1,36 @@
-// backend/seedKnownInstitutes.js
-// Safe to run multiple times — no-ops once any KnownInstitute docs exist.
+// Seeds and repairs the curated campus-location cache.
 // Standalone: node seedKnownInstitutes.js
-// Auto: called from server.js via mongoose 'open' event, alongside seedDummyData.
 
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config();
 
 const KnownInstitute = require('./models/KnownInstitute');
-const { universityDatabase } = require('./utils/universityResolver');
+const {
+  universityDatabase,
+  seededUniversityDatabase,
+} = require('./utils/universityResolver');
 
 async function seedKnownInstitutes() {
   try {
-    const existingCount = await KnownInstitute.countDocuments();
-    if (existingCount > 0) {
-      console.log(`KnownInstitute already seeded (${existingCount} docs) — skipping.`);
-      return;
-    }
+    const entries = Object.entries(seededUniversityDatabase);
+    const verifiedKeys = new Set(entries.map(([key]) => key));
+    const retiredLegacyKeys = Object.keys(universityDatabase)
+      .filter(key => !verifiedKeys.has(key));
 
-    const docs = Object.entries(universityDatabase).map(([key, value]) => ({
-      key,
-      name: value.name,
-      lat: value.lat,
-      lng: value.lng,
-    }));
+    // Delete only keys that came from the old bundled static list. Records
+    // learned later through live geocoding are not touched.
+    await KnownInstitute.deleteMany({ key: { $in: retiredLegacyKeys } });
 
-    await KnownInstitute.insertMany(docs, { ordered: false });
-    console.log(`Seeded KnownInstitute with ${docs.length} entries from universityResolver.js.`);
+    await KnownInstitute.bulkWrite(entries.map(([key, value]) => ({
+      updateOne: {
+        filter: { key },
+        update: { $set: { key, name: value.name, lat: value.lat, lng: value.lng } },
+        upsert: true,
+      },
+    })));
+
+    console.log(`Upserted ${entries.length} verified campus names and aliases into KnownInstitute.`);
   } catch (error) {
     console.error('Error seeding KnownInstitute:', error.message);
   }
@@ -34,7 +38,6 @@ async function seedKnownInstitutes() {
 
 module.exports = seedKnownInstitutes;
 
-// Allow standalone execution: node seedKnownInstitutes.js
 if (require.main === module) {
   mongoose.connect(process.env.MONGODB_URI)
     .then(async () => {

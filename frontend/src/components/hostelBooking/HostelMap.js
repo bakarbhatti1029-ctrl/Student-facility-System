@@ -40,8 +40,7 @@ const RoutingMachine = ({ start, end }) => {
         addWaypoints: false,
         fitSelectedRoutes: false,
         lineOptions: { styles: [{ color: 'blue', opacity: 0.8, weight: 4 }] },
-        createMarker: () => null,
-      });
+        createMarker: () => null });
       routingControl.on('routesfound routingerror', () => {
         if (destroyed) return;
       });

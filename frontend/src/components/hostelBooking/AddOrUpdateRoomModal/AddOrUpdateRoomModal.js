@@ -13,8 +13,7 @@ export function AddOrUpdateRoomModal({ action, payload, handleClose }) {
     handleImageUrlChange,
     handleRemoveBed,
     handleRemoveImageUrl,
-    handleSubmit,
-  } = handlers;
+    handleSubmit } = handlers;
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">

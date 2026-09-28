@@ -5,7 +5,7 @@ const kitchenOwnerSchema = new mongoose.Schema({
     first_name: { type: String, required: true }, // Owner's first name
     last_name: { type: String, required: true }, // Owner's last name
     email: { type: String, required: true, unique: true }, // Owner's email address
-    password: { type: String, required: true }, // Hashed password
+    password: { type: String, required: true, select: false }, // Hashed password
     gender: { type: String, required: false },
     phone_number: { type: String, required: true }, // Owner's phone number
     cnic: { type: String, required: true },

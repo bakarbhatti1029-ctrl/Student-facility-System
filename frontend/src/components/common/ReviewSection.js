@@ -7,8 +7,8 @@
 // (#1E201E cards, #59636e borders, #3C3D37 / #697565 buttons, white text).
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import Cookies from "js-cookie";
 import { FaStar } from "react-icons/fa";
+import { useSelector } from 'react-redux';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -21,6 +21,7 @@ const StarRow = ({ value }) => (
 );
 
 const ReviewSection = ({ targetType, targetId }) => {
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const [data, setData] = useState({ average: 0, count: 0, reviews: [] });
   const [eligible, setEligible] = useState(false);
   const [myReview, setMyReview] = useState(null);
@@ -29,8 +30,6 @@ const ReviewSection = ({ targetType, targetId }) => {
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-
-  const token = Cookies.get("token");
 
   const loadReviews = useCallback(async () => {
     try {
@@ -44,15 +43,14 @@ const ReviewSection = ({ targetType, targetId }) => {
   }, [targetType, targetId]);
 
   const loadEligibility = useCallback(async () => {
-    if (!token) {
+    if (!isAuthenticated) {
       setEligible(false);
       return;
     }
     try {
       const res = await axios.get(`${API_BASE_URL}/api/reviews/eligibility`, {
         params: { target_type: targetType, target_id: targetId },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        headers: { } });
       setEligible(!!res.data.eligible);
       if (res.data.myReview) {
         setMyReview(res.data.myReview);
@@ -62,7 +60,7 @@ const ReviewSection = ({ targetType, targetId }) => {
     } catch (e) {
       setEligible(false);
     }
-  }, [token, targetType, targetId]);
+  }, [isAuthenticated, targetType, targetId]);
 
   useEffect(() => {
     if (targetId) {
@@ -85,9 +83,8 @@ const ReviewSection = ({ targetType, targetId }) => {
           target_type: targetType,
           target_id: targetId,
           rating,
-          review_text: text,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+          review_text: text },
+        { headers: { } }
       );
       setMessage(myReview ? "Your review was updated." : "Thanks for your review!");
       setMyReview({ rating, review_text: text });

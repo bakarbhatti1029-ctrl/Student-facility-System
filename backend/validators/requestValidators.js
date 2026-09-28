@@ -63,8 +63,8 @@ const validateRegister = [
     .trim()
     .notEmpty()
     .withMessage('Phone number is required')
-    .matches(/^\+92[0-9]{10}$/)
-    .withMessage('Phone number must start with +92 followed by 10 digits'),
+    .matches(/^\+(?:92|91|234)[0-9]{10}$/)
+    .withMessage('Phone number must use +92, +91, or +234 followed by 10 digits'),
   body('cnic')
     .trim()
     .notEmpty()

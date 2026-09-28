@@ -29,8 +29,13 @@ exports.sendOtp = async (req, res, next) => {
             }
         }
 
+        // Always return the same public result. The short-lived initiation
+        // token carries no authority to reset a password; it only binds a
+        // later OTP attempt to this email.
+        const genericMessage = 'If an account with that email exists, a password reset code has been sent.';
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            const token = jwt.sign({ email, purpose: 'password-reset-otp' }, process.env.JWT_SECRET, { expiresIn: '10m' });
+            return res.json({ success: true, message: genericMessage, token });
         }
 
         // Generate OTP and update user
@@ -40,7 +45,7 @@ exports.sendOtp = async (req, res, next) => {
         await user.save();
 
         // Generate JWT token
-        const token = jwt.sign({ email, role, userId: user._id }, process.env.JWT_SECRET, { expiresIn: '10h' });
+        const token = jwt.sign({ email, role, userId: user._id, purpose: 'password-reset-otp' }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
         // Send email with OTP
         try {
@@ -57,12 +62,12 @@ If you did not request a password reset, please ignore this email or contact sup
             // Return success response
             res.json({ 
                 success: true,
-                message: 'Password reset OTP has been sent to your email.',
+                message: genericMessage,
                 token: token,
                 verified: user.email_verified 
             });
         } catch (emailError) {
-            console.error('Error sending password reset email:', emailError);
+            logger.error('Error sending password reset email:', emailError);
             
             // Reset the OTP if email fails
             user.reset_password_token = undefined;
@@ -76,11 +81,11 @@ If you did not request a password reset, please ignore this email or contact sup
             });
         }
     } catch (error) {
-        console.error('Error in forgot password flow:', error);
+        logger.error('Error in forgot password flow:', error);
         res.status(500).json({ 
             success: false,
             message: "An error occurred during password reset request.",
-            error: error.message
+            // Do not expose mail-provider internals to callers.
         });
     }
 };

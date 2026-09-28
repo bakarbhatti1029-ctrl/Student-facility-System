@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Cart = require('../../models/kitchenowner/Cart'); // Assuming Cart is related to kitchens
 const logger = require('../../utils/logger');
+const { setSessionCookie, setCsrfCookie } = require('../../utils/sessionCookie');
 
 exports.loginUser = async (req, res, next) => {
     try {
@@ -18,7 +19,9 @@ exports.loginUser = async (req, res, next) => {
         // Iterate through roles to find the user
         for (let r of roles) {
             const UserModel = getUserModel(r); // Get the model for the current role
-            user = await UserModel.findOne({ email });
+            // Passwords are excluded from normal model queries. Authentication
+            // is the only place that deliberately opts in to reading it.
+            user = await UserModel.findOne({ email }).select('+password');
 
             if (user) {
                 role = r;
@@ -28,6 +31,10 @@ exports.loginUser = async (req, res, next) => {
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.isBanned || user.status === 'banned') {
+            return res.status(403).json({ message: 'This account has been banned. Please contact support.' });
         }
 
         // Check if email is verified
@@ -48,6 +55,8 @@ exports.loginUser = async (req, res, next) => {
         // Use user.role (from DB) not the lookup key — DB stores 'hostelOwner'/'kitchenOwner' not 'hostelowner'/'kitchenowner'
         const payload = { id: user._id, email: user.email, role: user.role || role };
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '12h' });
+        setSessionCookie(res, token);
+        setCsrfCookie(res);
 
         // Fetch cart summary for the user (assuming the user is a 'student' or related role)
         let cartSummary = { itemCount: 0, kitchenCount: 0 };
@@ -70,13 +79,19 @@ exports.loginUser = async (req, res, next) => {
         }
 
         // Return the token, user information, and cart summary
+        const safeUser = user.toObject();
+        delete safeUser.password;
+        delete safeUser.reset_password_token;
+        delete safeUser.reset_password_token_time;
+        delete safeUser.verification_token;
+        delete safeUser.verification_token_time;
+
         res.json({
-            token,
-            user,
+            user: safeUser,
             cartSummary // Include cart summary in the response
         });
     } catch (error) {
-        console.error('Login Error:', error);
+        logger.error('Login error:', error);
         next(error); // Pass the error to the next middleware (usually an error handler)
     }
 };

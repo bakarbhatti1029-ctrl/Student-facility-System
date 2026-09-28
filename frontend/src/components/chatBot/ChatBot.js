@@ -2,18 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import './ChatBot.css';
 
 const SUGGESTIONS = [
-  'Show Hostels',
-  'Cheap Hostels Near Me',
-  'Show Food Kitchens',
-  'Cheap Food Options',
-  'Check Prices',
-  'Available Beds?',
-  'Hostel Facilities',
-  'My Booking Status',
-  'Cancel a Booking',
-  'Payment Options',
-  'How Does It Work?',
-  'Contact Info',
+  'Find a hostel',
+  'Available beds',
+  'Budget food',
+  'How does booking work?',
 ];
 
 function ChatBot() {
@@ -45,7 +37,7 @@ function ChatBot() {
     if (!msgText.trim()) return;
 
     setShowGreeting(false);
-    setMessages((prev) => [...prev, { text: msgText, sender: 'user' }]);
+    setMessages((prev) => [...prev, { text: msgText, sender: 'user', time: new Date() }]);
     setInput('');
     setIsLoading(true);
 
@@ -53,18 +45,16 @@ function ChatBot() {
       const response = await fetch(`${API_BASE}/api/chatbot/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: msgText }),
-      });
+        body: JSON.stringify({ text: msgText }) });
       const data = await response.json();
-      setMessages((prev) => [...prev, { text: data.reply, sender: 'bot' }]);
+      setMessages((prev) => [...prev, { text: data.reply, sender: 'bot', time: new Date() }]);
     } catch (error) {
       console.error('Chatbot error:', error);
       setMessages((prev) => [
         ...prev,
         {
           text: 'Could not reach the server. Please try again. Contact: +92-318-4183886',
-          sender: 'bot',
-        },
+          sender: 'bot', time: new Date() },
       ]);
     } finally {
       setIsLoading(false);
@@ -72,7 +62,10 @@ function ChatBot() {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') sendMessage();
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   const scrollToBottom = () => {
@@ -80,6 +73,11 @@ function ChatBot() {
   };
 
   useEffect(scrollToBottom, [messages, isLoading]);
+
+  const clearConversation = () => {
+    setMessages([]);
+    setShowGreeting(true);
+  };
 
   // Format bot message: convert *bold* and newlines
   const formatMessage = (text) => {
@@ -103,8 +101,8 @@ function ChatBot() {
           {/* Header */}
           <div className="chatbot-header">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-[#697565]">AI</span>
-              <span>SFS Assistant</span>
+              <span className="assistant-avatar">S</span>
+              <span><b>SFS Assistant</b><small>Online · here to help</small></span>
             </div>
             {!isMinimized && (
               <div className="header-controls">
@@ -127,24 +125,29 @@ function ChatBot() {
               {/* Greeting */}
               {showGreeting && (
                 <div className="chatbot-greeting">
-                  <h2>Welcome to SFS!</h2>
-                  <p>Ask me about hostels, food, prices, or how to use the platform.</p>
+                  <p className="greeting-eyebrow">Your student helper</p>
+                  <h2>Assalam-o-Alaikum! How can I help?</h2>
+                  <p>I can help you find hostels, check beds, browse food, or explain bookings.</p>
                 </div>
               )}
 
               {/* Messages */}
               <div className="chatbot-messages" onClick={(e) => e.stopPropagation()}>
                 {messages.map((msg, index) => (
-                  <div key={index} className={`message ${msg.sender}`}>
-                    {msg.sender === 'bot' ? formatMessage(msg.text) : msg.text}
+                  <div key={index} className={`message-row ${msg.sender}`}>
+                    {msg.sender === 'bot' && <span className="bot-mini-avatar">S</span>}
+                    <div className={`message ${msg.sender}`}>
+                      {msg.sender === 'bot' ? formatMessage(msg.text) : msg.text}
+                      <time>{msg.time?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
+                    </div>
                   </div>
                 ))}
 
                 {/* Typing indicator */}
                 {isLoading && (
-                  <div className="message bot typing-indicator">
+                <div className="message-row bot"><span className="bot-mini-avatar">S</span><div className="message bot typing-indicator">
                     <span></span><span></span><span></span>
-                  </div>
+                  </div></div>
                 )}
 
                 <div ref={messagesEndRef} />
@@ -165,18 +168,22 @@ function ChatBot() {
                 </div>
               )}
 
+              {messages.length > 0 && !isLoading && (
+                <button type="button" className="new-chat" onClick={clearConversation}>Start a new chat</button>
+              )}
+
               {/* Input */}
               <div className="chatbot-input" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="text"
-                  placeholder="Type a message..."
+                  placeholder="Ask about hostels, food or bookings…"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   disabled={isLoading}
                 />
                 <button onClick={() => sendMessage()} className="send-button" disabled={isLoading}>
-                  &#10148;
+                  <span aria-hidden="true">➤</span>
                 </button>
               </div>
             </>
