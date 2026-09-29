@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import API_BASE_URL from '../../utils/api';
 
 const toUint8Array = (base64) => {
@@ -26,29 +27,38 @@ const PushNotificationButton = () => {
       setState('working');
       setFeedback('');
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return setState(permission === 'denied' ? 'denied' : 'disabled');
+      if (permission !== 'granted') {
+        setState(permission === 'denied' ? 'denied' : 'disabled');
+        toast.warn('Notification permission was not granted.', { toastId: 'push-status' });
+        return;
+      }
 
-      const headers = { };
+      const headers = {};
       const [{ data }, registration] = await Promise.all([
         axios.get(`${API_BASE_URL}/api/push/public-key`, { headers }),
         navigator.serviceWorker.ready,
       ]);
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: toUint8Array(data.publicKey) });
+        applicationServerKey: toUint8Array(data.publicKey)
+      });
       await axios.post(`${API_BASE_URL}/api/push/subscribe`, subscription.toJSON(), { headers });
       setState('enabled');
       setFeedback('Notifications enabled.');
+      toast.success('Notifications enabled.', { toastId: 'push-status' });
       // Confirm immediately; actual booking/order alerts are sent later by
       // the backend when a relevant event occurs.
       registration.showNotification('SFS notifications enabled', {
         body: 'You will receive booking and order updates on this device.',
         icon: '/logo.png',
-        tag: 'sfs-notifications-enabled' }).catch(() => {});
+        tag: 'sfs-notifications-enabled'
+      }).catch(() => { });
     } catch (error) {
       console.error('Could not enable push notifications:', error);
       setState('disabled');
-      setFeedback(error.response?.data?.message || 'Could not enable notifications. Check browser permission and try again.');
+      const message = error.response?.data?.message || 'Could not enable notifications. Check browser permission and try again.';
+      setFeedback(message);
+      toast.error(message, { toastId: 'push-status' });
     }
   };
 
@@ -68,8 +78,9 @@ const PushNotificationButton = () => {
         // automatically by the notification service when a send fails.
         try {
           await axios.delete(`${API_BASE_URL}/api/push/unsubscribe`, {
-            headers: { },
-            data: { endpoint } });
+            headers: {},
+            data: { endpoint }
+          });
         } catch (error) {
           console.warn('Could not remove the server push subscription:', error);
         }
@@ -77,9 +88,11 @@ const PushNotificationButton = () => {
 
       setState('disabled');
       setFeedback('Notifications disabled.');
+      toast.info('Notifications disabled.', { toastId: 'push-status' });
     } catch (error) {
       console.error('Could not disable push notifications:', error);
       setState('enabled');
+      toast.error('Could not disable notifications. Please try again.', { toastId: 'push-status' });
     }
   };
 
@@ -97,21 +110,21 @@ const PushNotificationButton = () => {
 
   return (
     <span className="relative inline-flex">
-    <button
-      type="button"
-      onClick={isEnabled ? disable : enable}
-      disabled={isBusy || isBlocked}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-default disabled:opacity-45 ${isEnabled ? 'text-emerald-300 drop-shadow-[0_0_7px_rgba(110,231,183,0.7)] hover:scale-110' : 'text-white/80 hover:scale-110 hover:text-white'}`}
-      title={tooltip}
-      aria-label={tooltip}
-    >
-      {isBlocked ? '🔕' : '🔔'}
-    </button>
-    {feedback && (
-      <span role="status" className="absolute right-0 top-11 z-50 w-56 rounded bg-black/90 px-2 py-1 text-xs leading-4 text-white shadow-lg">
-        {feedback}
-      </span>
-    )}
+      <button
+        type="button"
+        onClick={isEnabled ? disable : enable}
+        disabled={isBusy || isBlocked}
+        className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-default disabled:opacity-45 ${isEnabled ? 'text-emerald-300 drop-shadow-[0_0_7px_rgba(110,231,183,0.7)] hover:scale-110' : 'text-white/80 hover:scale-110 hover:text-white'}`}
+        title={tooltip}
+        aria-label={tooltip}
+      >
+        {isBlocked ? '🔕' : '🔔'}
+      </button>
+      {feedback && (
+        <span role="status" className="absolute right-0 top-11 z-50 w-56 rounded bg-black/90 px-2 py-1 text-xs leading-4 text-white shadow-lg">
+          {feedback}
+        </span>
+      )}
     </span>
   );
 };

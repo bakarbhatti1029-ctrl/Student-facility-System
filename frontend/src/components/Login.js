@@ -9,6 +9,7 @@ import { loginUser, setCredentials } from '../store/authSlice';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
 import API_BASE_URL from '../utils/api';
 
 
@@ -46,10 +47,12 @@ const LoginForm = () => {
   const formik = useFormik({
     initialValues: {
       email: '',
-      password: '' },
+      password: ''
+    },
     validationSchema: Yup.object({
       email: Yup.string().email('Invalid email address').required('Required'),
-      password: Yup.string().required('Required') }),
+      password: Yup.string().required('Required')
+    }),
     onSubmit: async (values) => {
       try {
         const response = await dispatch(loginUser(values)).unwrap();
@@ -60,10 +63,11 @@ const LoginForm = () => {
 
         // Clear any verification data
         sessionStorage.removeItem('verified');
-        
+
         if (user.role === 'student') {
           toast.success(`${user.first_name} ${user.last_name} has successfully logged in!`, {
-            toastId: 'login-success' });
+            toastId: 'login-success'
+          });
           navigate('/');
         } else if (user.role === 'hostelOwner') {
           navigate('/hostel-owner-profile');
@@ -74,7 +78,8 @@ const LoginForm = () => {
         setRetryAfter(error?.retryAfter || 0);
         setError(error?.message || 'Invalid email or password');
       }
-    } });
+    }
+  });
 
   // Make Enter submit reliably even when a browser does not use the form's
   // implicit submit behavior for the focused input.
@@ -100,7 +105,8 @@ const LoginForm = () => {
       setError('');
       try {
         const { data } = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
-          email: formik.values.email });
+          email: formik.values.email
+        });
         if (data.success) {
           sessionStorage.setItem('verified', 'true');
           navigate('/otp');
@@ -109,15 +115,15 @@ const LoginForm = () => {
           setError(data.message || 'Failed to send OTP');
         }
       } catch (error) {
-        setError('An error occurred. Please try again.');
+        setError(error?.response?.data?.message || 'An error occurred. Please try again.');
       }
     }
   };
-  
+
 
   return (
     <div className="h-full w-full bg-black">
-    
+
       <div className="bg-black h-full w-full flex flex-col md:flex-row justify-center container">
 
         <div className="flex flex-col items-center  justify-center max-h-[100vh] bg-black mb-12 mt-8">
@@ -129,7 +135,7 @@ const LoginForm = () => {
           />
         </div>
         <div className="px-4 md:pl-10 md:px-0 flex flex-col justify-center relative bg-black p-3 mt-8 mb-12 w-full max-w-lg overflow-y-auto scrollbar-hide h-auto md:h-[100vh]">
-        <div className="text-gray-300 text-center pt-9 justify-end">
+          <div className="text-gray-300 text-center pt-9 justify-end">
             <h1 className="font-bold text-4xl">Welcome Back</h1>
             <p className="text-wrap max-w-md p-3">
               Welcome back! Please enter your credentials.
