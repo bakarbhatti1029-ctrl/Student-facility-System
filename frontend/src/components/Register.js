@@ -286,7 +286,8 @@ const RegistrationForm = () => {
       kitchen_address: "",
       kitchen_description: "",
       kitchen_picture: "",
-      // stripe_account_id: "" });
+      // stripe_account_id: "",
+    });
     formik.setTouched({});
     formik.setErrors({});
   };

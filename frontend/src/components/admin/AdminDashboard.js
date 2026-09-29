@@ -1167,7 +1167,7 @@ const AdminDashboard = () => {
             <p>© {new Date().getFullYear()} Student Facility System</p>
             <div className="flex items-center gap-4">
               <a href="/" className="font-medium hover:underline" style={{ color: ink.sub }}>Open public website</a>
-              <a href="mailto:aqibawan0102@gmail.com" className="font-medium hover:underline" style={{ color: ink.sub }}>Technical support</a>
+              <a href="mailto:mscodes148@gmail.com" className="font-medium hover:underline" style={{ color: ink.sub }}>Technical support</a>
             </div>
           </div>
         </footer>
