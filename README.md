@@ -326,7 +326,7 @@ If later commits depend on this migration, revert those first or resolve conflic
 
 | Project author | Team members |
 |---|---|
-| **Aqib Awan (Aqib Ejaz)** | **Abubakr Bhatti** · **M. Sami** |
+| **Aqib Awan (Aqib Ejaz)** | **Abubakr Bhatti** · **M Sami** |
 
 **Govt. Shalimar Graduate College, Lahore**
 

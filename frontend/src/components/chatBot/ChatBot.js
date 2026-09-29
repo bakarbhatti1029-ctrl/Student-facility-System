@@ -45,7 +45,8 @@ function ChatBot() {
       const response = await fetch(`${API_BASE}/api/chatbot/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: msgText }) });
+        body: JSON.stringify({ text: msgText })
+      });
       const data = await response.json();
       setMessages((prev) => [...prev, { text: data.reply, sender: 'bot', time: new Date() }]);
     } catch (error) {
@@ -53,8 +54,9 @@ function ChatBot() {
       setMessages((prev) => [
         ...prev,
         {
-          text: 'Could not reach the server. Please try again. Contact: +92-318-4183886',
-          sender: 'bot', time: new Date() },
+          text: 'Could not reach the server. Please try again. Contact: +92-321-6886448',
+          sender: 'bot', time: new Date()
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -145,7 +147,7 @@ function ChatBot() {
 
                 {/* Typing indicator */}
                 {isLoading && (
-                <div className="message-row bot"><span className="bot-mini-avatar">S</span><div className="message bot typing-indicator">
+                  <div className="message-row bot"><span className="bot-mini-avatar">S</span><div className="message bot typing-indicator">
                     <span></span><span></span><span></span>
                   </div></div>
                 )}

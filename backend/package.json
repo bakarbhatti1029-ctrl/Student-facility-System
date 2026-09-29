@@ -8,7 +8,7 @@
     "seed": "node seed.js",
     "dev": "nodemon server.js"
   },
-  "author": "MUHAMMAD SAMI", 
+  "author": "ABUBAKAR BHATTI",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.7.7",

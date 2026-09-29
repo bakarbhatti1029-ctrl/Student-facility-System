@@ -27,13 +27,14 @@ const ContactUs = () => {
   useEffect(() => {
 
     axios.get(`${API_BASE_URL}/auth/me`).then(({ data }) => {
-        const parsedUser = data.user;
-        setIsAuthenticated(true);
-        setFormData((prev) => ({
-          ...prev,
-          name: `${parsedUser.first_name || parsedUser.firstName || ''} ${parsedUser.last_name || parsedUser.lastName || ''}`.trim(),
-          phone: parsedUser.phone_number || parsedUser.phone || prev.phone,
-          email: parsedUser.email || prev.email }));
+      const parsedUser = data.user;
+      setIsAuthenticated(true);
+      setFormData((prev) => ({
+        ...prev,
+        name: `${parsedUser.first_name || parsedUser.firstName || ''} ${parsedUser.last_name || parsedUser.lastName || ''}`.trim(),
+        phone: parsedUser.phone_number || parsedUser.phone || prev.phone,
+        email: parsedUser.email || prev.email
+      }));
     }).catch(() => setIsAuthenticated(false));
   }, []);
 
@@ -49,7 +50,8 @@ const ContactUs = () => {
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/api/contact/submit`, formData, {
-        headers: { } });
+        headers: {}
+      });
       setSubmitted(true);
       setFormData({ name: formData.name, phone: formData.phone, email: formData.email, subject: 'General Inquiry', message: '' });
       setTimeout(() => setSubmitted(false), 5000);
@@ -67,7 +69,7 @@ const ContactUs = () => {
         description="Get in touch with Student Facility System for questions about hostel bookings, food orders, or account support."
       />
       <Navbar module="home" />
-      <div className="relative bg-cover bg-center" style={{ backgroundImage:`url('https://images.unsplash.com/photo-1556911220-bff31c812dba?w=800&auto=format&fit=crop&q=60')`, height:'350px' }}>
+      <div className="relative bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1556911220-bff31c812dba?w=800&auto=format&fit=crop&q=60')`, height: '350px' }}>
         <div className="absolute inset-0 bg-black opacity-60"></div>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <h1 className="text-white text-4xl font-bold">Contact Us</h1>
@@ -80,9 +82,9 @@ const ContactUs = () => {
             <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
             <div className="space-y-5">
               {[
-                { icon: <FaUser />, label: 'Developer', value: 'Muhammad Sami', href: 'https://aqibawan2003.netlify.app/', external: true },
-                { icon: <FaEnvelope />, label: 'Email', value: 'mscodes148@gmail.com', href: 'mailto:mscodes148@gmail.com' },
-                { icon: <FaPhone />, label: 'Phone', value: '+92-318-4183886', href: 'tel:+923184183886' },
+                { icon: <FaUser />, label: 'Developer', value: 'Abubakar Bhatti', external: true },
+                { icon: <FaEnvelope />, label: 'Email', value: 'abubakarbhatti686@gmail.com', href: 'mailto:abubakarbhatti686@gmail.com' },
+                { icon: <FaPhone />, label: 'Phone', value: '+92-3216886448', href: 'tel:+923216886448' },
                 { icon: <FaMapMarkerAlt />, label: 'Location', value: 'Shalimar College, Lahore, Pakistan' },
                 { icon: <FaClock />, label: 'Support Hours', value: 'Monday to Saturday, 9 AM to 6 PM PKT' },
               ].map(({ icon, label, value, href, external }) => (

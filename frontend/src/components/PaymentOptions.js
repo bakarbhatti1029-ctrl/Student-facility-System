@@ -1,5 +1,5 @@
 // Payment Options Component with JazzCash and EasyPaisa (Locked)
-// Author: MUHAMMAD SAMI
+// Author: ABUBAKAR BHATTI
 //
 // ─────────────────────────────────────────────────────────────────────────────
 // HOW TO ENABLE JazzCash or EasyPaisa LATER (one-line change):
@@ -23,21 +23,24 @@ export const PAYMENT_METHODS = [
     icon: FaCreditCard,
     status: 'active',
     description: 'Credit / Debit Card',
-    color: 'green' },
+    color: 'green'
+  },
   {
     id: 'jazzcash',
     name: 'JazzCash',
     icon: FaMobileAlt,
     status: 'pending',
     description: 'Mobile Wallet - Locked',
-    color: 'gray' },
+    color: 'gray'
+  },
   {
     id: 'easypaisa',
     name: 'EasyPaisa',
     icon: FaMobileAlt,
     status: 'pending',
     description: 'Mobile Wallet - Locked',
-    color: 'gray' },
+    color: 'gray'
+  },
 ];
 
 const PaymentOptions = ({ selectedMethod, onMethodChange, showModal = false }) => {
@@ -59,7 +62,7 @@ const PaymentOptions = ({ selectedMethod, onMethodChange, showModal = false }) =
       {/* Title */}
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-bold flex items-center gap-2">
-          <FaMoneyBillWave style={{verticalAlign:"middle",marginRight:"6px"}} />Payment Method
+          <FaMoneyBillWave style={{ verticalAlign: "middle", marginRight: "6px" }} />Payment Method
         </h3>
         <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
           Stripe Active
@@ -82,12 +85,11 @@ const PaymentOptions = ({ selectedMethod, onMethodChange, showModal = false }) =
               className={`
                 w-full flex items-center justify-between p-4 rounded-xl border-2
                 transition-all duration-200
-                ${
-                  isActive
-                    ? isSelected
-                      ? 'border-green-600 bg-green-50'
-                      : 'border-green-400 bg-green-50 hover:bg-green-100 hover:border-green-500'
-                    : 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                ${isActive
+                  ? isSelected
+                    ? 'border-green-600 bg-green-50'
+                    : 'border-green-400 bg-green-50 hover:bg-green-100 hover:border-green-500'
+                  : 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
                 }
                 ${isActive && !isSelected ? 'hover:shadow-md' : ''}
               `}

@@ -6,11 +6,13 @@ const outputDirectory = path.join(__dirname, '..', 'reports');
 const outputPath = path.join(outputDirectory, 'SFS-Security-and-Reliability-Fixes-Report.pdf');
 fs.mkdirSync(outputDirectory, { recursive: true });
 
-const doc = new PDFDocument({ size: 'A4', margin: 54, info: {
-  Title: 'SFS Security and Reliability Fixes Report',
-  Author: 'Aqib Ejaz',
-  Subject: 'Implemented security, payment, data-integrity and frontend fixes',
-} });
+const doc = new PDFDocument({
+  size: 'A4', margin: 54, info: {
+    Title: 'SFS Security and Reliability Fixes Report',
+    Author: 'Abubakar bhatti',
+    Subject: 'Implemented security, payment, data-integrity and frontend fixes',
+  }
+});
 doc.pipe(fs.createWriteStream(outputPath));
 
 const pageBottom = () => doc.page.height - doc.page.margins.bottom - 18;
